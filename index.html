@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Off by One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@500;600;700&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<style>
+/* Layout: one-screen card table. Header, HUD, a board stage that fills the remaining height, then status, rules and settings. */
+:root {
+  color-scheme: dark;
+  --bg: #11161f;
+  --panel: #18202c;
+  --panel-2: #1d2634;
+  --line: #2b3648;
+  --ink: #ece7dc;
+  --muted: #8f99aa;
+  --brass: #d6a64b;
+  --brass-soft: rgba(214, 166, 75, .16);
+  --brass-line: rgba(214, 166, 75, .55);
+  --brass-ink: #1c1507;
+  --bad: #ff5b5f;
+  --good: #53c98f;
+  --card: #f5f1e7;
+  --card-edge: #cbc3b0;
+  --back: #263450;
+  --back-2: #31436a;
+  --club: #1f8248;
+  --diamond: #2a5fc2;
+  --heart: #c62f3a;
+  --spade: #1b212d;
+  --shadow: rgba(0, 0, 0, .45);
+  --f-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --f-num: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+button { font: inherit; color: inherit; }
+
+.app {
+  min-height: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto auto minmax(min(64vh, 132vw, 620px), 1fr) auto auto auto;
+  gap: 12px;
+  padding-block: 14px 18px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Header */
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 16px; }
+.mark { display: grid; gap: 0; }
+.wordmark { font-family: var(--f-display); font-weight: 800; font-size: clamp(34px, 7vw, 48px); line-height: .9; letter-spacing: .02em; margin: 0; text-transform: uppercase; }
+.wordmark .by { display: inline-block; color: var(--brass); transform: translateY(.16em); transition: transform .5s cubic-bezier(.3, 1.6, .5, 1); }
+.mark:hover .by { transform: translateY(0); }
+.tagline { font-style: italic; color: var(--muted); margin-top: 6px; font-size: 15px; }
+
+.seg { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-family: var(--f-num); font-weight: 600; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--brass); color: var(--brass-ink); }
+.seg button:focus-visible, .btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* HUD */
+.hud { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; min-height: 44px; }
+.stat { display: grid; gap: 0; }
+.lbl { font-family: var(--f-num); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.val { font-family: var(--f-num); font-weight: 700; font-size: 22px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.pips { display: flex; gap: 5px; padding-top: 5px; }
+.pip { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--muted); box-sizing: border-box; }
+.pip.on { background: var(--bad); border-color: var(--bad); }
+.timer { flex: 1 1 160px; display: grid; gap: 4px; min-width: 140px; }
+.timer-top { display: flex; justify-content: space-between; }
+.bar { height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; border: 1px solid var(--line); }
+.fill { height: 100%; width: 100%; background: var(--brass); transform-origin: left; }
+.fill.low { background: var(--bad); }
+.check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.check input { accent-color: var(--brass); width: 16px; height: 16px; }
+
+/* Stage + board */
+.stage { position: relative; display: grid; place-items: center; min-height: 0; }
+.frame { padding: 10px; border-radius: 16px; background: linear-gradient(160deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 10px 30px var(--shadow); transition: box-shadow .3s, border-color .3s; }
+.frame.won { border-color: var(--good); box-shadow: 0 0 0 3px rgba(83, 201, 143, .25), 0 10px 30px var(--shadow); }
+.frame.lost { border-color: var(--bad); }
+.board { position: relative; overflow: hidden; touch-action: none; border-radius: 8px; outline: none; cursor: grab; }
+.board.grabbing { cursor: grabbing; }
+.board:focus-visible { box-shadow: 0 0 0 2px var(--brass); }
+.slot, .tile, .band, .mark-x { position: absolute; left: 0; top: 0; }
+.slot { width: var(--cw); height: var(--ch); border-radius: calc(var(--cw) * .09); background: rgba(255, 255, 255, .035); }
+.band { background: var(--brass-soft); border: 1px solid var(--brass-line); border-radius: 8px; box-sizing: border-box; pointer-events: none; }
+.band.answer { background: rgba(83, 201, 143, .14); border-color: rgba(83, 201, 143, .6); }
+
+.tile {
+  width: var(--cw); height: var(--ch); box-sizing: border-box;
+  border-radius: calc(var(--cw) * .09);
+  background: var(--card);
+  box-shadow: 0 1px 0 var(--card-edge), 0 2px 5px var(--shadow);
+  display: grid; place-items: center; align-content: center; gap: 0;
+  user-select: none; will-change: transform;
+}
+.tile .ix { position: absolute; top: calc(var(--cw) * .06); left: calc(var(--cw) * .09); font-family: var(--f-num); font-weight: 700; font-size: calc(var(--cw) * .17); line-height: 1; }
+.tile .rk { font-family: var(--f-num); font-weight: 700; font-size: calc(var(--cw) * .5); line-height: .95; letter-spacing: -.02em; }
+.tile .st { font-size: calc(var(--cw) * .32); line-height: 1; }
+.s1 { color: var(--club); } .s2 { color: var(--diamond); } .s3 { color: var(--heart); } .s4 { color: var(--spade); }
+.tile.lifted { box-shadow: 0 1px 0 var(--card-edge), 0 6px 14px var(--shadow); }
+.tile.bad { box-shadow: 0 0 0 3px var(--bad), 0 2px 5px var(--shadow); }
+.board:focus-visible .tile.cursor { box-shadow: 0 0 0 3px var(--brass), 0 2px 5px var(--shadow); }
+.mark-x { background: var(--bad); border-radius: 999px; border: 2px solid var(--bg); box-sizing: content-box; z-index: 5; pointer-events: none; }
+.veiled .tile { background: repeating-linear-gradient(45deg, var(--back) 0 6px, var(--back-2) 6px 12px); box-shadow: inset 0 0 0 3px var(--card), 0 2px 5px var(--shadow); }
+.veiled .tile > * { visibility: hidden; }
+
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; z-index: 10; padding: 12px; }
+.overlay[hidden] { display: none; }
+.panel { background: var(--panel); border: 1px solid var(--brass-line); border-radius: 14px; padding: 20px 22px; max-width: 360px; box-shadow: 0 16px 40px var(--shadow); display: grid; gap: 12px; }
+.panel h2 { font-family: var(--f-display); font-weight: 800; font-size: 30px; line-height: 1; margin: 0; text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
+.panel ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.panel .hi { color: var(--brass); font-weight: 600; }
+.panel .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.big { font-family: var(--f-num); font-weight: 700; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--brass); }
+
+/* Status, controls, help */
+.status { min-height: 1.45em; text-align: center; font-weight: 500; }
+.status .good { color: var(--good); } .status .bad { color: var(--bad); }
+.controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; min-height: 40px; }
+.btn { border: 1px solid var(--line); background: var(--panel); padding: 8px 18px; border-radius: 10px; cursor: pointer; font-family: var(--f-num); font-weight: 600; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; }
+.btn:hover { border-color: var(--brass-line); }
+.btn.primary { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); }
+.help { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.rule { font-weight: 600; }
+.how { color: var(--muted); font-size: 14px; }
+.how kbd { font-family: var(--f-num); font-weight: 600; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; background: var(--panel); color: var(--ink); }
+.settings { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.setting { display: flex; align-items: center; gap: 8px; }
+.note { color: var(--muted); font-size: 13px; }
+.sel { font-family: var(--f-num); font-weight: 600; font-size: 15px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; }
+.sel:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.dim { opacity: .5; }
+
+@media (max-width: 480px) {
+  .hud { gap: 6px 16px; }
+  .val { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wordmark .by { transition: none; }
+}
+
+/* Standalone page reset */
+body { margin: 0; }
+[hidden] { display: none !important; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="mark">
+      <h1 class="wordmark">Off <span class="by">by</span> One</h1>
+      <div class="tagline">Shift happens.</div>
+    </div>
+    <div class="seg" role="group" aria-label="Mode">
+      <button type="button" id="mode-practice" data-action="mode" data-value="practice">Practice</button>
+      <button type="button" id="mode-challenge" data-action="mode" data-value="challenge">Challenge</button>
+    </div>
+  </header>
+
+  <div class="hud" id="hud"></div>
+
+  <div class="stage" id="stage">
+    <div class="frame" id="frame">
+      <div class="board" id="board" tabindex="0" role="application" aria-roledescription="puzzle board" aria-label="Card grid. Arrow keys pick a card, Shift plus arrows slide its row or column, Enter commits, Escape cancels."></div>
+    </div>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
+
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="controls" id="controls"></div>
+
+  <div class="help">
+    <div class="rule" id="rule-text"></div>
+    <div class="how">One row or column has been shifted out of place. Drag a row sideways or a column up or down to put it back. Tiles wrap around the edge, and you get one shift. Keyboard: arrows pick a card, <kbd>Shift</kbd>+arrows slide its lane, <kbd>Enter</kbd> commits, <kbd>Esc</kbd> cancels.</div>
+    <div class="settings">
+      <div class="setting"><span class="lbl">Rules</span>
+        <div class="seg" role="group" aria-label="Rules">
+          <button type="button" id="rule-gap" data-action="rule" data-value="gap">Rank gap</button>
+          <button type="button" id="rule-match" data-action="rule" data-value="match">Suit or rank</button>
+        </div>
+      </div>
+      <div class="setting" id="size-setting"><span class="lbl">Board</span>
+        <div class="seg" role="group" aria-label="Board size">
+          <button type="button" id="size-4x4" data-action="size" data-value="4x4">4×4</button>
+          <button type="button" id="size-4x5" data-action="size" data-value="4x5">4×5</button>
+          <button type="button" id="size-5x5" data-action="size" data-value="5x5">5×5</button>
+        </div>
+      </div>
+      <div class="setting"><label class="lbl" for="start-level">Start at level</label>
+        <select id="start-level" class="sel"></select>
+      </div>
+      <div class="setting"><span class="lbl">Sound</span>
+        <div class="seg" role="group" aria-label="Sound">
+          <button type="button" id="sound-on" data-action="sound" data-value="on">On</button>
+          <button type="button" id="sound-off" data-action="sound" data-value="off">Off</button>
+        </div>
+      </div>
+    </div>
+    <div class="note">Board size applies to Practice; in Challenge the board grows as you level up. Start at level is a playtest shortcut. Changing it or the rules starts a new run.</div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---------- constants ----------
+  // Challenge levels: the board grows first, then the clock shrinks. Past the table, each level
+  // loses DECAY_SECS more, down to MIN_SECS, so every run ends eventually.
+  const LEVELS = [
+    { size: '4x4', secs: 60 },
+    { size: '4x5', secs: 60 },
+    { size: '5x5', secs: 60 },
+    { size: '5x5', secs: 50 },
+    { size: '5x5', secs: 40 },
+    { size: '5x5', secs: 30 },
+  ];
+  const DECAY_SECS = 3;
+  const MIN_SECS = 3;
+  const levelInfo = L => {
+    if (L <= LEVELS.length) return LEVELS[L - 1];
+    const last = LEVELS[LEVELS.length - 1];
+    return { size: last.size, secs: Math.max(MIN_SECS, last.secs - DECAY_SECS * (L - LEVELS.length)) };
+  };
+  const TASKS_PER_LEVEL = 5;
+  const MAX_STRIKES = 3;
+  const SUIT_SYM = { 1: '♣', 2: '♦', 3: '♥', 4: '♠' };
+  const SUIT_NAME = { 1: 'clubs', 2: 'diamonds', 3: 'hearts', 4: 'spades' };
+  const RANK_TXT = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
+  const RANK_NAME = { 11: 'Jack', 12: 'Queen', 13: 'King', 14: 'Ace' };
+  const ALL = [];
+  for (let s = 1; s <= 4; s++) for (let r = 2; r <= 14; r++) ALL.push(s * 100 + r);
+  const suit = c => Math.floor(c / 100), rank = c => c % 100;
+  const RULES = {
+    match: { ok: (a, b) => suit(a) === suit(b) || rank(a) === rank(b), text: 'Rule: every card must share a suit or a rank with each card it touches.' },
+    gap: { ok: (a, b) => Math.abs(rank(a) - rank(b)) >= 2, text: 'Rule: touching cards must differ in rank by at least 2. J = 11, Q = 12, K = 13, A = 14.' },
+  };
+  const SIZES = { '4x4': [4, 4], '4x5': [4, 5], '5x5': [5, 5] };
+
+  const $ = s => document.querySelector(s);
+  const boardEl = $('#board'), frameEl = $('#frame'), stageEl = $('#stage');
+  const hudEl = $('#hud'), statusEl = $('#status'), controlsEl = $('#controls'), overlayEl = $('#overlay');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const mod = (a, n) => ((a % n) + n) % n;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { } },
+  };
+
+  // ---------- state ----------
+  const saved = store.get('obo-settings', {});
+  let S = {
+    mode: 'practice', rule: saved.rule || 'gap', size: saved.size || '4x5', sound: saved.sound !== false, startLevel: saved.startLevel || 1,
+    showClashes: false, R: 4, C: 5, grid: [], puzzle: [], solutions: [], phase: 'play', cursor: [0, 0],
+    practice: { solved: 0, played: 0 },
+    run: { level: 1, tasks: 0, strikes: 0, score: 0, solved: 0, pendingLevel: false },
+    elapsed: 0, running: false, msg: '', reviewing: false,
+  };
+  let runStart = 0;
+  let geo = { p: 60, pY: 80, gap: 6, cw: 54, ch: 75 };
+  let tiles = new Map(), ghosts = new Map(), bandEl = null;
+  let drag = null, kb = null, busy = false;
+
+  const bests = () => store.get('obo-best', {});
+  const bestKey = () => `${S.rule}-levels`;
+  const best = () => bests()[bestKey()] || 0;
+
+  // ---------- puzzle logic ----------
+  const ok = (a, b) => RULES[S.rule].ok(a, b);
+
+  function genGrid(R, C) {
+    for (let attempt = 0; attempt < 60; attempt++) {
+      const g = new Array(R * C).fill(0), used = new Set();
+      let nodes = 0;
+      const bt = i => {
+        if (i === R * C) return true;
+        if (++nodes > 20000) return false;
+        const r = (i / C) | 0, c = i % C;
+        for (const x of shuffle(ALL.slice())) {
+          if (used.has(x)) continue;
+          if (c > 0 && !ok(g[i - 1], x)) continue;
+          if (r > 0 && !ok(g[i - C], x)) continue;
+          g[i] = x; used.add(x);
+          if (bt(i + 1)) return true;
+          used.delete(x);
+        }
+        g[i] = 0;
+        return false;
+      };
+      if (bt(0)) return g;
+    }
+    return null;
+  }
+
+  function badPairs(g, R = S.R, C = S.C) {
+    const out = [];
+    for (let i = 0; i < R * C; i++) {
+      const r = (i / C) | 0, c = i % C;
+      if (c < C - 1 && !ok(g[i], g[i + 1])) out.push([i, i + 1]);
+      if (r < R - 1 && !ok(g[i], g[i + C])) out.push([i, i + C]);
+    }
+    return out;
+  }
+
+  function allMoves(R, C) {
+    const ms = [];
+    for (let r = 0; r < R; r++) for (let s = 1; s < C; s++) ms.push({ axis: 'row', idx: r, steps: s });
+    for (let c = 0; c < C; c++) for (let s = 1; s < R; s++) ms.push({ axis: 'col', idx: c, steps: s });
+    return ms;
+  }
+
+  function applyMove(g, R, C, m) {
+    const out = g.slice();
+    if (m.axis === 'row') for (let c = 0; c < C; c++) out[m.idx * C + mod(c + m.steps, C)] = g[m.idx * C + c];
+    else for (let r = 0; r < R; r++) out[mod(r + m.steps, R) * C + m.idx] = g[r * C + m.idx];
+    return out;
+  }
+
+  // Grids where every horizontal (or vertical) pair matches on the same attribute read as plain stripes.
+  function striped(g, R, C) {
+    let hS = true, hR = true, vS = true, vR = true;
+    for (let i = 0; i < R * C; i++) {
+      const r = (i / C) | 0, c = i % C;
+      if (c < C - 1) { if (suit(g[i]) !== suit(g[i + 1])) hS = false; if (rank(g[i]) !== rank(g[i + 1])) hR = false; }
+      if (r < R - 1) { if (suit(g[i]) !== suit(g[i + C])) vS = false; if (rank(g[i]) !== rank(g[i + C])) vR = false; }
+    }
+    return hS || hR || vS || vR;
+  }
+
+  function makePuzzle(R, C) {
+    const ms = allMoves(R, C);
+    for (let t = 0; t < 300; t++) {
+      const sol = genGrid(R, C);
+      if (!sol) continue;
+      if (S.rule === 'match' && striped(sol, R, C)) continue;
+      const p = applyMove(sol, R, C, pick(ms));
+      if (badPairs(p, R, C).length === 0) continue;
+      // Any shift that leaves the board valid counts, as in RTA; the list is only used to show an answer.
+      const sols = ms.filter(m => badPairs(applyMove(p, R, C, m), R, C).length === 0);
+      return { puzzle: p, solutions: sols };
+    }
+    return null;
+  }
+
+  function othersText() {
+    const k = S.solutions.length - 1;
+    return k > 0 ? ` ${k} other shift${k > 1 ? 's' : ''} also work${k > 1 ? '' : 's'}.` : '';
+  }
+
+  function moveText(m) {
+    const n = m.axis === 'row' ? S.C : S.R;
+    const fwd = m.steps <= n / 2;
+    const k = fwd ? m.steps : n - m.steps;
+    const dir = m.axis === 'row' ? (fwd ? 'right' : 'left') : (fwd ? 'down' : 'up');
+    return `${m.axis} ${m.idx + 1} ${dir} by ${k}`;
+  }
+
+  // ---------- sound ----------
+  let ac = null;
+  function ensureAudio() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch { ac = null; } }
+    if (ac && ac.state === 'suspended') ac.resume().catch(() => { });
+  }
+  function tone(freq, dur, type = 'sine', vol = .06, when = 0) {
+    if (!S.sound || !ac) return;
+    const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + .02);
+  }
+  const sTick = () => tone(2100, .025, 'square', .02);
+  const sWin = () => { tone(660, .16, 'triangle', .09); tone(990, .3, 'triangle', .09, .11); };
+  const sLose = () => { tone(190, .28, 'sawtooth', .05); tone(140, .35, 'sawtooth', .04, .12); };
+  const sDeal = () => { for (let i = 0; i < 4; i++) tone(900 + i * 120, .03, 'square', .015, i * .05); };
+
+  // ---------- board rendering ----------
+  function cardEl(card) {
+    const el = document.createElement('div');
+    const r = rank(card), s = suit(card), rt = RANK_TXT[r] || String(r);
+    el.className = `tile s${s}`;
+    el.setAttribute('aria-label', `${RANK_NAME[r] || r} of ${SUIT_NAME[s]}`);
+    el.innerHTML = `<span class="ix">${rt}</span><span class="rk">${rt}</span><span class="st">${SUIT_SYM[s]}</span>`;
+    return el;
+  }
+
+  function rebuild() {
+    boardEl.innerHTML = '';
+    tiles.clear(); ghosts.clear(); bandEl = null;
+    for (let i = 0; i < S.R * S.C; i++) { const sl = document.createElement('div'); sl.className = 'slot'; sl.dataset.i = i; boardEl.appendChild(sl); }
+    for (const card of S.grid) { const el = cardEl(card); tiles.set(card, el); boardEl.appendChild(el); }
+    layout();
+  }
+
+  function layout() {
+    const r = stageEl.getBoundingClientRect();
+    const availW = r.width - 24, availH = r.height - 24;
+    const p = Math.max(36, Math.floor(Math.min(availW / S.C, availH / (1.35 * S.R), 104)));
+    geo.p = p;
+    geo.gap = Math.max(4, Math.round(p * .1));
+    geo.cw = p - geo.gap;
+    geo.ch = Math.round(geo.cw / .72);
+    geo.pY = geo.ch + geo.gap;
+    boardEl.style.width = S.C * p + 'px';
+    boardEl.style.height = S.R * geo.pY + 'px';
+    boardEl.style.setProperty('--cw', geo.cw + 'px');
+    boardEl.style.setProperty('--ch', geo.ch + 'px');
+    boardEl.querySelectorAll('.slot').forEach(sl => { const [x, y] = xy(+sl.dataset.i); place(sl, x, y); });
+    positionAll();
+    drawClashes();
+  }
+
+  function xy(i) { const r = (i / S.C) | 0, c = i % S.C; return [c * geo.p + geo.gap / 2, r * geo.pY + geo.gap / 2]; }
+  function place(el, x, y) { el.style.transform = `translate(${x}px, ${y}px)`; }
+  function positionAll() { S.grid.forEach((card, i) => { const el = tiles.get(card); if (el) { const [x, y] = xy(i); place(el, x, y); } }); updateCursor(); }
+
+  function laneCells(axis, idx) {
+    const out = [];
+    if (axis === 'row') for (let c = 0; c < S.C; c++) out.push(idx * S.C + c);
+    else for (let r = 0; r < S.R; r++) out.push(r * S.C + idx);
+    return out;
+  }
+  const pitch = axis => axis === 'row' ? geo.p : geo.pY;
+  const laneLen = axis => axis === 'row' ? S.C : S.R;
+
+  function showBand(axis, idx, cls = '') {
+    hideBand();
+    bandEl = document.createElement('div');
+    bandEl.className = `band ${cls}`;
+    if (axis === 'row') { bandEl.style.width = S.C * geo.p + 'px'; bandEl.style.height = geo.pY + 'px'; place(bandEl, 0, idx * geo.pY); }
+    else { bandEl.style.width = geo.p + 'px'; bandEl.style.height = S.R * geo.pY + 'px'; place(bandEl, idx * geo.p, 0); }
+    boardEl.insertBefore(bandEl, boardEl.querySelector('.tile'));
+  }
+  function hideBand() { if (bandEl) { bandEl.remove(); bandEl = null; } }
+
+  function beginLane(axis, idx) {
+    showBand(axis, idx);
+    for (const i of laneCells(axis, idx)) {
+      const card = S.grid[i], el = tiles.get(card);
+      el.classList.add('lifted');
+      const gh = el.cloneNode(true);
+      gh.setAttribute('aria-hidden', 'true');
+      ghosts.set(card, gh);
+      boardEl.appendChild(gh);
+    }
+    boardEl.classList.add('grabbing');
+    drawClashes();
+  }
+  function endLane() {
+    ghosts.forEach(g => g.remove()); ghosts.clear();
+    tiles.forEach(t => t.classList.remove('lifted'));
+    hideBand();
+    boardEl.classList.remove('grabbing');
+  }
+  function renderLane(axis, idx, d) {
+    const cells = laneCells(axis, idx), P = pitch(axis), L = cells.length * P, h = geo.gap / 2;
+    cells.forEach((i, k) => {
+      const card = S.grid[i], el = tiles.get(card), gh = ghosts.get(card);
+      const pos = mod(k * P + d, L), [x0, y0] = xy(i);
+      if (axis === 'row') { place(el, pos + h, y0); gh && place(gh, pos - L + h, y0); }
+      else { place(el, x0, pos + h); gh && place(gh, x0, pos - L + h); }
+    });
+  }
+
+  function tween(from, to, ms, onFrame, done) {
+    if (reduced) ms = 0;
+    const t0 = performance.now();
+    const f = now => {
+      const t = ms ? Math.min(1, (now - t0) / ms) : 1, e = 1 - Math.pow(1 - t, 3);
+      onFrame(from + (to - from) * e);
+      if (t < 1) requestAnimationFrame(f); else done && done();
+    };
+    requestAnimationFrame(f);
+  }
+
+  const showingClashes = () => !drag?.axis && !kb && !busy &&
+    (S.phase === 'failed' || S.phase === 'over' || (S.mode === 'practice' && S.showClashes && S.phase === 'play'));
+
+  function drawClashes() {
+    boardEl.querySelectorAll('.mark-x').forEach(m => m.remove());
+    tiles.forEach(t => t.classList.remove('bad'));
+    if (!showingClashes()) return;
+    const th = Math.max(5, Math.round(geo.gap * .8)), len = Math.round(geo.cw * .42);
+    for (const [i, j] of badPairs(S.grid)) {
+      tiles.get(S.grid[i]).classList.add('bad');
+      tiles.get(S.grid[j]).classList.add('bad');
+      const [x, y] = xy(i), m = document.createElement('div');
+      m.className = 'mark-x';
+      if (j === i + 1) { m.style.width = th + 'px'; m.style.height = len + 'px'; place(m, x + geo.cw + geo.gap / 2 - th / 2 - 2, y + geo.ch / 2 - len / 2 - 2); }
+      else { m.style.width = len + 'px'; m.style.height = th + 'px'; place(m, x + geo.cw / 2 - len / 2 - 2, y + geo.ch + geo.gap / 2 - th / 2 - 2); }
+      boardEl.appendChild(m);
+    }
+  }
+
+  function updateCursor() {
+    tiles.forEach(t => t.classList.remove('cursor'));
+    const [r, c] = S.cursor, card = S.grid[r * S.C + c];
+    tiles.get(card)?.classList.add('cursor');
+  }
+
+  function flash(cls) { frameEl.classList.add(cls); setTimeout(() => frameEl.classList.remove(cls), 900); }
+
+  // ---------- timer ----------
+  const elapsedMs = () => S.elapsed + (S.running ? performance.now() - runStart : 0);
+  const levelSecs = () => levelInfo(S.run.level).secs;
+  function startTimer() { S.running = true; runStart = performance.now(); requestAnimationFrame(frame); }
+  function stopTimer() { if (S.running) { S.elapsed += performance.now() - runStart; S.running = false; } }
+  function frame() {
+    if (!S.running) return;
+    const left = levelSecs() * 1000 - elapsedMs();
+    paintTimer(left);
+    if (left <= 0) { onTimeout(); return; }
+    requestAnimationFrame(frame);
+  }
+  function paintTimer(left) {
+    const fill = $('#timer-fill'), secs = $('#timer-secs');
+    if (!fill) return;
+    const total = levelSecs() * 1000;
+    left = clamp(left ?? total - elapsedMs(), 0, total);
+    fill.style.transform = `scaleX(${left / total})`;
+    fill.classList.toggle('low', left < 10000);
+    secs.textContent = `${Math.ceil(left / 1000)}s`;
+  }
+
+  // ---------- game flow ----------
+  function newPuzzle() {
+    [S.R, S.C] = SIZES[S.mode === 'challenge' ? levelInfo(S.run.level).size : S.size];
+    const { puzzle, solutions } = makePuzzle(S.R, S.C);
+    S.puzzle = puzzle; S.grid = puzzle.slice(); S.solutions = solutions;
+    S.elapsed = 0; S.running = false; S.cursor = [0, 0]; S.reviewing = false;
+    rebuild();
+  }
+
+  function newRun() {
+    stopTimer();
+    S.run = { level: S.startLevel || 1, tasks: 0, strikes: 0, score: 0, solved: 0, pendingLevel: false };
+    newPuzzle();
+    S.phase = 'ready';
+    S.msg = '';
+    render();
+  }
+
+  function newPractice() {
+    newPuzzle();
+    S.phase = 'play';
+    S.practice.played++;
+    S.msg = 'One lane is off. Find it and shift it back.';
+    sDeal();
+    render();
+  }
+
+  function startPlay() {
+    S.phase = 'play';
+    S.msg = '';
+    S.elapsed = 0;
+    sDeal();
+    render();
+    startTimer();
+    boardEl.focus({ preventScroll: true });
+  }
+
+  function nextChallenge() {
+    if (S.run.pendingLevel) {
+      S.run.pendingLevel = false; S.run.level++; S.run.strikes = 0;
+      newPuzzle();
+      S.phase = 'ready'; S.msg = '';
+      sWin();
+      render();
+    } else { newPuzzle(); startPlay(); }
+  }
+
+  function commit(m) {
+    S.grid = applyMove(S.grid, S.R, S.C, m);
+    positionAll();
+    const bad = badPairs(S.grid);
+    if (bad.length === 0) onSolved(m); else onWrong(bad.length);
+  }
+
+  function taskDone() {
+    S.run.tasks++;
+    if (S.run.strikes >= MAX_STRIKES) {
+      S.phase = 'over';
+      const b = bests();
+      if (S.run.score > (b[bestKey()] || 0)) { b[bestKey()] = S.run.score; store.set('obo-best', b); S.run.newBest = true; }
+      return true;
+    }
+    if (S.run.tasks % TASKS_PER_LEVEL === 0) S.run.pendingLevel = true;
+    return false;
+  }
+
+  function onSolved(m) {
+    stopTimer();
+    sWin(); flash('won');
+    if (S.mode === 'practice') {
+      S.practice.solved++;
+      S.phase = 'solved';
+      S.msg = `<span class="good">Solved.</span> That was ${moveText(m)}.`;
+    } else {
+      const secs = Math.round(elapsedMs() / 1000), left = Math.max(0, levelSecs() - secs), pts = left * S.run.level;
+      S.run.score += pts; S.run.solved++;
+      S.phase = 'solved';
+      taskDone();
+      S.msg = `<span class="good">Solved in ${secs}s.</span> ${left}s left × level ${S.run.level} = <span class="good">+${pts}</span>`;
+    }
+    render();
+  }
+
+  function onWrong(n) {
+    stopTimer();
+    sLose(); flash('lost');
+    const clash = `That shift leaves ${n} clash${n > 1 ? 'es' : ''}.`;
+    if (S.mode === 'practice') {
+      S.phase = 'failed';
+      S.msg = `<span class="bad">${clash}</span> Undo and try again, or see the answer.`;
+    } else strike(clash);
+    render();
+  }
+
+  function onTimeout() {
+    stopTimer();
+    if (drag?.axis || kb) { endLane(); drag = null; kb = null; busy = false; positionAll(); }
+    sLose(); flash('lost');
+    strike("Time's up.");
+    render();
+  }
+
+  function strike(reason) {
+    S.run.strikes++;
+    const over = taskDone();
+    if (!over) S.phase = 'failed';
+    S.msg = `<span class="bad">${reason}</span> Strike ${S.run.strikes} of ${MAX_STRIKES}. A fix: ${moveText(S.solutions[0])}.${othersText()}`;
+  }
+
+  function undo() {
+    S.grid = S.puzzle.slice();
+    positionAll();
+    S.phase = 'play';
+    S.msg = 'Board restored. You still get one shift.';
+    render();
+  }
+
+  function showAnswer() {
+    const m = S.solutions[0], n = laneLen(m.axis), P = pitch(m.axis);
+    const steps = m.steps > n / 2 ? m.steps - n : m.steps;
+    S.grid = S.puzzle.slice();
+    positionAll();
+    busy = true;
+    render();
+    setTimeout(() => {
+      beginLane(m.axis, m.idx);
+      bandEl.classList.add('answer');
+      tween(0, steps * P, 650, v => renderLane(m.axis, m.idx, v), () => {
+        endLane();
+        S.grid = applyMove(S.grid, S.R, S.C, m);
+        positionAll();
+        showBand(m.axis, m.idx, 'answer');
+        setTimeout(hideBand, 1100);
+        busy = false;
+        S.phase = S.phase === 'over' ? 'over' : 'revealed';
+        S.msg = `A fix: ${moveText(m)}.${othersText()}`;
+        render();
+      });
+    }, reduced ? 0 : 250);
+  }
+
+  const canMove = () => S.phase === 'play' && !busy && !(S.mode === 'challenge' && !S.running);
+
+  // ---------- input: pointer ----------
+  boardEl.addEventListener('pointerdown', e => {
+    ensureAudio();
+    if (!canMove() || kb) return;
+    const rect = boardEl.getBoundingClientRect();
+    const c = clamp(Math.floor((e.clientX - rect.left) / geo.p), 0, S.C - 1);
+    const r = clamp(Math.floor((e.clientY - rect.top) / geo.pY), 0, S.R - 1);
+    drag = { x0: e.clientX, y0: e.clientY, r, c, axis: null, idx: 0, d: 0, last: 0, id: e.pointerId };
+    S.cursor = [r, c];
+    boardEl.setPointerCapture(e.pointerId);
+  });
+  boardEl.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (!drag.axis) {
+      if (Math.hypot(dx, dy) < 7) return;
+      drag.axis = Math.abs(dx) >= Math.abs(dy) ? 'row' : 'col';
+      drag.idx = drag.axis === 'row' ? drag.r : drag.c;
+      beginLane(drag.axis, drag.idx);
+    }
+    drag.d = drag.axis === 'row' ? dx : dy;
+    renderLane(drag.axis, drag.idx, drag.d);
+    const st = Math.round(drag.d / pitch(drag.axis));
+    if (st !== drag.last) { drag.last = st; sTick(); }
+  });
+  const release = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null;
+    if (!d.axis) { updateCursor(); return; }
+    settle(d.axis, d.idx, d.d);
+  };
+  boardEl.addEventListener('pointerup', release);
+  boardEl.addEventListener('pointercancel', release);
+
+  function settle(axis, idx, d) {
+    const P = pitch(axis), n = laneLen(axis), steps = Math.round(d / P);
+    busy = true;
+    tween(d, steps * P, 140, v => renderLane(axis, idx, v), () => {
+      endLane();
+      busy = false;
+      const s = mod(steps, n);
+      if (s === 0 || S.phase !== 'play') { positionAll(); drawClashes(); render(); return; }
+      commit({ axis, idx, steps: s });
+    });
+  }
+
+  // ---------- input: keyboard ----------
+  boardEl.addEventListener('keydown', e => {
+    const k = e.key;
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', ' '].includes(k)) return;
+    e.preventDefault();
+    ensureAudio();
+    if (busy) return;
+    const [r, c] = S.cursor;
+    if (k.startsWith('Arrow')) {
+      const horiz = k === 'ArrowLeft' || k === 'ArrowRight', dir = (k === 'ArrowRight' || k === 'ArrowDown') ? 1 : -1;
+      if (e.shiftKey) {
+        if (!canMove()) return;
+        const axis = horiz ? 'row' : 'col', idx = axis === 'row' ? r : c;
+        if (kb && (kb.axis !== axis || kb.idx !== idx)) { statusEl.innerHTML = 'Press Enter to commit this shift or Esc to cancel it.'; return; }
+        if (!kb) { kb = { axis, idx, steps: 0 }; beginLane(axis, idx); }
+        const P = pitch(axis), from = kb.steps * P;
+        kb.steps += dir;
+        sTick();
+        busy = true;
+        tween(from, kb.steps * P, 110, v => renderLane(axis, idx, v), () => { busy = false; });
+        const n = laneLen(axis), s = mod(kb.steps, n);
+        statusEl.innerHTML = s === 0 ? 'Back where it started. Esc to cancel.' : `Previewing ${moveText({ axis, idx, steps: s })}. Enter to commit, Esc to cancel.`;
+      } else if (!kb) {
+        S.cursor = horiz ? [r, clamp(c + dir, 0, S.C - 1)] : [clamp(r + dir, 0, S.R - 1), c];
+        updateCursor();
+      }
+    } else if (k === 'Enter' || k === ' ') {
+      if (kb) { const m = kb; kb = null; settle(m.axis, m.idx, m.steps * pitch(m.axis)); }
+    } else if (k === 'Escape') {
+      if (kb) {
+        const m = kb, P = pitch(m.axis); kb = null; busy = true;
+        tween(m.steps * P, 0, 140, v => renderLane(m.axis, m.idx, v), () => { endLane(); busy = false; positionAll(); render(); });
+      }
+    }
+  });
+
+  // ---------- UI rendering ----------
+  function render() {
+    // segmented controls
+    document.querySelectorAll('[data-action="mode"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === S.mode)));
+    document.querySelectorAll('[data-action="rule"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === S.rule)));
+    document.querySelectorAll('[data-action="size"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.value === S.size)));
+    document.querySelectorAll('[data-action="sound"]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.value === 'on') === S.sound)));
+    $('#rule-text').textContent = RULES[S.rule].text;
+    $('#start-level').value = String(S.startLevel || 1);
+    $('#size-setting').classList.toggle('dim', S.mode === 'challenge');
+
+    // HUD
+    if (S.mode === 'practice') {
+      hudEl.innerHTML = `
+        <div class="stat"><span class="lbl">Solved</span><span class="val">${S.practice.solved} / ${S.practice.played}</span></div>
+        <label class="check"><input type="checkbox" id="show-clashes" ${S.showClashes ? 'checked' : ''}> Show clashes</label>`;
+    } else {
+      const R = S.run;
+      const inLevel = (S.phase === 'play' || S.phase === 'ready') ? (R.tasks % TASKS_PER_LEVEL) + 1 : ((R.tasks - 1) % TASKS_PER_LEVEL) + 1;
+      const pips = Array.from({ length: MAX_STRIKES }, (_, i) => `<span class="pip ${i < R.strikes ? 'on' : ''}"></span>`).join('');
+      hudEl.innerHTML = `
+        <div class="stat"><span class="lbl">Level</span><span class="val">${R.level}</span></div>
+        <div class="stat"><span class="lbl">Puzzle</span><span class="val">${inLevel}/${TASKS_PER_LEVEL}</span></div>
+        <div class="stat"><span class="lbl">Strikes</span><span class="pips" aria-label="${R.strikes} of ${MAX_STRIKES} strikes">${pips}</span></div>
+        <div class="stat"><span class="lbl">Score</span><span class="val">${R.score}</span></div>
+        <div class="stat"><span class="lbl">Best</span><span class="val">${best()}</span></div>
+        <div class="timer"><div class="timer-top"><span class="lbl">Time</span><span class="lbl" id="timer-secs"></span></div><div class="bar"><div class="fill" id="timer-fill"></div></div></div>`;
+      paintTimer(S.phase === 'ready' ? levelSecs() * 1000 : undefined);
+    }
+
+    // controls
+    const b = (action, label, primary) => `<button type="button" class="btn ${primary ? 'primary' : ''}" data-action="${action}">${label}</button>`;
+    let html = '';
+    if (S.mode === 'practice') {
+      if (S.phase === 'play') html = b('new', 'New puzzle');
+      else if (S.phase === 'failed') html = b('undo', 'Undo shift', true) + b('answer', 'Show answer') + b('new', 'New puzzle');
+      else html = b('new', 'Next puzzle', true);
+    } else {
+      if (S.phase === 'solved' || S.phase === 'revealed') html = b('next', 'Next puzzle', true);
+      else if (S.phase === 'failed') html = b('next', 'Next puzzle', true) + b('answer', 'Show answer');
+      else if (S.phase === 'over' && S.reviewing) html = b('again', 'Play again', true) + b('answer', 'Show answer');
+      if (S.phase !== 'over') html += b('restart', 'Restart run');
+    }
+    controlsEl.innerHTML = html;
+
+    // overlay
+    boardEl.classList.toggle('veiled', S.phase === 'ready');
+    if (S.mode === 'challenge' && S.phase === 'ready') {
+      const L = S.run.level, info = levelInfo(L), first = S.run.tasks === 0, prev = levelInfo(Math.max(1, L - 1));
+      const sz = `<span class="hi">${info.size.replace('x', '×')}</span>`, secs = `<span class="hi">${info.secs} seconds</span>`;
+      const change = first ? `<li>Board: ${sz}, ${secs} per puzzle.</li>`
+        : prev.size !== info.size ? `<li>The board grows to ${sz}.</li><li>You ${prev.secs === info.secs ? 'still have' : 'now have'} ${secs} per puzzle.</li>`
+        : `<li>You now have ${secs} per puzzle.</li>`;
+      const rest = first
+        ? `<li>Fix each board with a <span class="hi">single shift</span>.</li><li>A wrong shift or running out of time earns a <span class="hi">strike</span>. Three strikes end the run; strikes reset every ${TASKS_PER_LEVEL} puzzles.</li><li>Each solve scores <span class="hi">seconds left × level</span>.</li>`
+        : `<li>Your strikes have been <span class="hi">reset</span>.</li>`;
+      overlayEl.innerHTML = `<div class="panel"><h2>Level ${L}</h2><ul>${change}${rest}</ul><div class="row">${b('start', first ? 'Start' : 'Continue', true)}</div></div>`;
+      overlayEl.hidden = false;
+    } else if (S.phase === 'over' && !S.reviewing) {
+      const R = S.run;
+      overlayEl.innerHTML = `<div class="panel"><h2>Run over</h2><div class="big">${R.score}</div>
+        <div>${R.solved} of ${R.tasks} puzzles solved, reached level ${R.level}.${R.newBest ? ' <span class="hi">New best!</span>' : ` Best: ${best()}.`}</div>
+        <div class="row">${b('again', 'Play again', true)}${b('review', 'Review board')}</div></div>`;
+      overlayEl.hidden = false;
+    } else {
+      overlayEl.hidden = true;
+      overlayEl.innerHTML = '';
+    }
+
+    statusEl.innerHTML = S.msg || (S.mode === 'challenge' && S.phase === 'play' ? 'One lane is off. Find it and shift it back.' : '');
+    drawClashes();
+  }
+
+  // ---------- UI events ----------
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    ensureAudio();
+    const a = el.dataset.action, v = el.dataset.value;
+    if (busy && a !== 'sound') return;
+    if (a === 'mode' && v !== S.mode) {
+      stopTimer(); S.mode = v; S.msg = '';
+      v === 'challenge' ? newRun() : newPractice();
+    } else if (a === 'rule' && v !== S.rule) { S.rule = v; saveSettings(); restartForSettings(); }
+    else if (a === 'size' && v !== S.size) { S.size = v; saveSettings(); S.mode === 'practice' ? newPractice() : render(); }
+    else if (a === 'sound') { S.sound = v === 'on'; saveSettings(); render(); if (S.sound) sTick(); }
+    else if (a === 'new') newPractice();
+    else if (a === 'undo') undo();
+    else if (a === 'answer') showAnswer();
+    else if (a === 'start') startPlay();
+    else if (a === 'next') nextChallenge();
+    else if (a === 'restart' || a === 'again') newRun();
+    else if (a === 'review') { S.reviewing = true; render(); }
+  });
+  hudEl.addEventListener('change', e => {
+    if (e.target.id === 'show-clashes') { S.showClashes = e.target.checked; drawClashes(); }
+  });
+
+  $('#start-level').addEventListener('change', e => {
+    S.startLevel = +e.target.value; saveSettings();
+    if (S.mode === 'challenge') newRun();
+  });
+
+  function saveSettings() { store.set('obo-settings', { rule: S.rule, size: S.size, sound: S.sound, startLevel: S.startLevel }); }
+  function restartForSettings() { stopTimer(); S.mode === 'challenge' ? newRun() : newPractice(); }
+
+  new ResizeObserver(() => { if (!drag?.axis && !kb && !busy) layout(); }).observe(stageEl);
+
+  // ---------- boot, with live-update state carry-over ----------
+  $('#start-level').innerHTML = Array.from({ length: 15 }, (_, i) => {
+    const L = i + 1, f = levelInfo(L);
+    return `<option value="${L}">${L} · ${f.size.replace('x', '×')} · ${f.secs}s</option>`;
+  }).join('');
+
+  window.claude?.hot?.snapshot?.(() => ({ S: { ...S, elapsed: elapsedMs(), running: S.running } }));
+
+  function start(data) {
+    const prev = data && data.S;
+    if (prev && Array.isArray(prev.grid) && prev.grid.length && SIZES[prev.size] && RULES[prev.rule]) {
+      const wasRunning = prev.running;
+      S = { ...S, ...prev, running: false };
+      rebuild();
+      render();
+      if (wasRunning && S.phase === 'play') startTimer();
+    } else {
+      newPractice();
+    }
+  }
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
