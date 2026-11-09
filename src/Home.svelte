@@ -119,6 +119,12 @@
 		display: inline-block;
 		font-size: 40px;
 		transform: translateY(8px);
+		/* off by a little, and on a hover it springs into line, overshooting, as in the prototype */
+		transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+
+	.titles:hover .by {
+		transform: translateY(0);
 	}
 
 	.tagline {
