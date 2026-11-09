@@ -4,7 +4,7 @@
 	import Splash from '../Splash.svelte';
 	import { DX, DY, PAGE_SLIDE_MS, SPLASH_SLIDE_MS } from '../const';
 	import { app, saveGame } from '../shared.svelte';
-	import { wakeAudio } from '../sound';
+	import { setAway, wakeAudio } from '../sound';
 	import { post, slideX } from '../utils';
 
 	// the page is designed at DX × DY and scales to fit the window
@@ -24,7 +24,7 @@
 	};
 </script>
 
-<svelte:window bind:innerWidth={ww} bind:innerHeight={wh} onpointerdown={wakeAudio} onkeydown={wakeAudio} onpagehide={saveNow} />
+<svelte:window bind:innerWidth={ww} bind:innerHeight={wh} onpointerdown={wakeAudio} onkeydown={wakeAudio} onpagehide={saveNow} onblur={() => setAway(true)} onfocus={() => setAway(false)} />
 <svelte:document onvisibilitychange={() => document.visibilityState === 'hidden' && saveNow()} />
 
 <div id="app" class="nohi">

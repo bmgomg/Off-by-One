@@ -17,6 +17,7 @@
 		setSize,
 		showAnswer,
 		startPlay,
+		toggleMusic,
 		toggleSound,
 		reset,
 		resume,
@@ -185,6 +186,7 @@
 			<button type="button" onclick={newDeal}>New Deal</button>
 		{/if}
 		<button type="button" onclick={toggleSound}>Sound {app.sound ? 'On' : 'Off'}</button>
+		<button type="button" onclick={toggleMusic}>Music {app.music ? 'On' : 'Off'}</button>
 	</nav>
 </div>
 
@@ -676,5 +678,23 @@
 		font-size: 17px;
 		letter-spacing: 2px;
 		cursor: pointer;
+		/* a tap presses it in, and it springs back out past its size, as the size pills do */
+		transition:
+			color 0.2s,
+			text-shadow 0.2s,
+			transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+
+	.toolbar button:active {
+		transform: scale(0.88);
+		transition-duration: 0.2s, 0.2s, 0.08s;
+	}
+
+	/* the words light up: paler gold, with a glow */
+	@media (hover: hover) {
+		.toolbar button:hover {
+			color: var(--gold-pale);
+			text-shadow: 0 0 10px rgba(243, 220, 156, 0.55);
+		}
 	}
 </style>

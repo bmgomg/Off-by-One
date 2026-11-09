@@ -87,6 +87,17 @@ in `src/const.js`. In the app's theme a level is an "act", a puzzle a "trick", t
 Practice has no timer and a board-size choice, and lets you mark clashes. A wrong shift shows the same single Reset;
 there's no Reveal in Practice any more.
 
+## Music
+
+Race the Ace's track (`src/lib/sounds/music.mp3`), played by howler and managed as in Dark Matter (`src/sound.js`): the
+loop starts on the first Practice or Challenge (a tap, which browsers require before sound), then keeps playing with
+only its volume changing. It fades up from silence over `MUSIC_FADE_MS` (5 s) to `MUSIC_VOLUME` (0.4) whenever it starts
+or comes back (Music On, back in the window), and goes quiet at once (Music Off, out of the window). Music On/Off is in
+the toolbar and saved with the settings. The effects stay synthesized (`sfx`), with their own Sound On/Off.
+
+The track's source and licence aren't on record: Race the Ace names none, and Dark Matter's notes say the same of the
+BMG games' shared tracks. Settle that, and any credit it requires, before release.
+
 ## Coming back to a game
 
 Each mode's game is saved in localStorage (`APP_STATE • practice`, `APP_STATE • challenge`) as it changes, each second of
@@ -115,5 +126,5 @@ Simulated rule sets (one random shift applied to a valid grid, 200–300 puzzles
 ## Open questions
 
 - Lowest playable time limit, and whether to drop 3 or 5 seconds per level, or a percentage.
-- Not yet in the app: music, offline play (PWA: Dark Matter's service worker and manifest need app icons first), the
+- Not yet in the app: offline play (PWA: Dark Matter's service worker and manifest need app icons first), the
   itch.io build, a playtest level jump.

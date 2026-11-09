@@ -1,6 +1,6 @@
 import { APP_STATE, MAX_STRIKES, RESET_SLIDE_MS, SIZES, TASKS_PER_LEVEL } from './const';
 import { RULES, applyMove, badPairs, geometry, levelInfo, makePuzzle, mod, moveText, points } from './logic';
-import { setSound, sfx } from './sound';
+import { setMusic, setSound, sfx, startMusic } from './sound';
 import { reducedMotion, tween } from './utils';
 
 const KEY = APP_STATE;
@@ -12,6 +12,7 @@ export const app = $state({
 	rule: 'gap',
 	size: '4x5',
 	sound: true,
+	music: true,
 	best: {}
 });
 
@@ -30,13 +31,15 @@ export function loadSettings() {
 	app.rule = RULES[saved.rule] ? saved.rule : 'gap';
 	app.size = SIZES[saved.size] ? saved.size : '4x5';
 	app.sound = saved.sound !== false;
+	app.music = saved.music !== false;
 	app.best = saved.best || {};
 	setSound(app.sound);
+	setMusic(app.music, false);
 }
 
 export function save() {
 	try {
-		localStorage.setItem(KEY, JSON.stringify({ rule: app.rule, size: app.size, sound: app.sound, best: app.best }));
+		localStorage.setItem(KEY, JSON.stringify({ rule: app.rule, size: app.size, sound: app.sound, music: app.music, best: app.best }));
 	} catch {
 		// storage can be unavailable (private mode); settings then last for the session
 	}
@@ -149,6 +152,7 @@ function deal() {
 
 /** To the game in Practice: the puzzle saved there, waiting for Resume, or else a new one. */
 export function startPractice() {
+	startMusic();
 	stopTimer();
 	app.mode = 'practice';
 	app.page = 'game';
@@ -168,6 +172,7 @@ export function newDeal() {
 
 /** To the game in Challenge: the run saved there, waiting for Resume, or else a new one. */
 export function startChallenge() {
+	startMusic();
 	stopTimer();
 	app.mode = 'challenge';
 	app.page = 'game';
@@ -478,6 +483,12 @@ export function toggleSound() {
 	setSound(app.sound);
 	save();
 	if (app.sound) sfx.tick();
+}
+
+export function toggleMusic() {
+	app.music = !app.music;
+	setMusic(app.music);
+	save();
 }
 
 export function setRule(rule) {
