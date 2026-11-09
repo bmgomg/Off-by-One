@@ -183,6 +183,8 @@
 <div
 	class="board"
 	class:veiled
+	class:live={canMove()}
+	class:dragging={lane.user && lane.axis !== null}
 	bind:this={boardEl}
 	style="width: {g.W}px; height: {g.H}px; --cw: {g.cw}px; --ch: {g.ch}px"
 	tabindex="0"
@@ -244,8 +246,16 @@
 		position: relative;
 		overflow: hidden;
 		touch-action: none;
-		cursor: grab;
 		outline: none;
+	}
+
+	/* the hand only while a lane can be moved (not on a solved, waiting or face-down board), closed while one is */
+	.board.live {
+		cursor: grab;
+	}
+
+	.board.dragging {
+		cursor: grabbing;
 	}
 
 	.board:focus-visible {
