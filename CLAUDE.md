@@ -1,6 +1,6 @@
 # Off by One
 
-*Shift happens.*
+*Slide of hand.*
 
 A card puzzle for the SHIFT jam: one row or column has slipped out of place. Slide it back.
 The lane wraps around, and you get one shift per puzzle.
@@ -50,7 +50,9 @@ board with its buttons, a new one pushing the old out (`STRIP_SLIDE_MS`, 0.4 s).
 ## Challenge
 
 Five puzzles per level, three strikes end the run, and strikes reset each level. A wrong shift or
-running out of time is a strike. Each solve scores **seconds left × level**.
+running out of time is a strike. A wrong shift stops the clock and shows one button, Reset: the board goes back as dealt
+and the clock runs on from where it stopped, so the trick can still be solved (the designer's call). Running out of time
+ends the trick, showing a fix, with Next trick and Reveal. Each solve scores **seconds left × level**.
 
 | Level | Board | Seconds per puzzle |
 |---|---|---|
@@ -63,10 +65,10 @@ running out of time is a strike. Each solve scores **seconds left × level**.
 | 7+ | 5×5 | 3 fewer per level, down to 3 (level 15) |
 
 The clock has no playable floor, so every run ends. Tune `LEVELS`, `DECAY_SECS` and `MIN_SECS`
-in `src/lib/logic.js`. In the app's theme a level is an "act", a puzzle a "trick", the score "applause".
+in `src/const.js`. In the app's theme a level is an "act", a puzzle a "trick", the score "applause".
 
-Practice has no timer and a board-size choice; it lets you undo a wrong shift, reveal the answer,
-and mark clashes.
+Practice has no timer and a board-size choice, and lets you mark clashes. A wrong shift shows the same single Reset;
+there's no Reveal in Practice any more.
 
 ## Design notes
 

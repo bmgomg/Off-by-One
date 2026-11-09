@@ -422,22 +422,26 @@
 		gap: 12px;
 	}
 
+	/* from the board down to the toolbar's divider (the negative margin takes up the page's gap above the toolbar), at
+	   a fixed height, so the board's room (BOARD_H) doesn't change with the message */
 	.strip {
 		width: 100%;
+		height: 98px;
+		margin-bottom: -6px;
 		display: grid;
 	}
 
+	/* the message at the top, and its buttons midway between it and the divider */
 	.step {
 		grid-area: 1/1;
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-rows: auto 1fr;
+		justify-items: center;
 		align-items: center;
-		gap: 6px;
 	}
 
 	.msg {
 		margin: 0;
-		min-height: 44px;
 		max-width: 400px;
 		font-style: italic;
 		font-size: 18px;

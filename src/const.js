@@ -5,7 +5,7 @@ export const DX = 450;
 export const DY = 800;
 
 export const TITLE = 'Off by One';
-export const TAGLINE = 'Shift happens.';
+export const TAGLINE = 'Slide of hand.';
 
 // the splash slides off to the left as the page slides in from the right, pushing it, in this long
 export const SPLASH_SLIDE_MS = 700;

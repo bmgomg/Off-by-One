@@ -256,7 +256,7 @@ function onWrong(n) {
 	stopTimer();
 	sfx.lose();
 	flash('lost');
-	const clash = `That leaves ${n} clash${n > 1 ? 'es' : ''}.`;
+	const clash = `Oh, shift! That leaves ${n} clash${n > 1 ? 'es' : ''}.`;
 	if (app.mode === 'challenge') {
 		game.run.strikes++;
 		if (game.run.strikes >= MAX_STRIKES) {
