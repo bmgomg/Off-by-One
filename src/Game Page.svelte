@@ -86,7 +86,7 @@
 					{/each}
 				</span>
 			</div>
-			<div class="stat right"><span class="lbl">Applause</span><span class="val gold"><NumberFlow value={run.score} /></span></div>
+			<div class="stat"><span class="lbl">Applause</span><span class="val gold"><NumberFlow value={run.score} /></span></div>
 		</div>
 		<div class="timer" role="img" aria-label="{leftSecs} seconds left">
 			<i></i>
@@ -261,13 +261,11 @@
 		justify-self: end;
 	}
 
+	/* each value centred under its label */
 	.stat {
 		display: flex;
 		flex-direction: column;
-	}
-
-	.stat.right {
-		align-items: flex-end;
+		align-items: center;
 	}
 
 	.lbl {
