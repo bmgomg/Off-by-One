@@ -1,4 +1,5 @@
 <script>
+	import NumberFlow, { NumberFlowGroup } from '@number-flow/svelte';
 	import Board from './Board.svelte';
 	import { MAX_STRIKES, SIZES, STRIP_SLIDE_MS, TASKS_PER_LEVEL } from './const';
 	import { RULES, levelInfo } from './logic';
@@ -52,8 +53,8 @@
 
 	{#if challenge}
 		<div class="stats">
-			<div class="stat"><span class="lbl">Act</span><span class="val">{run.level}</span></div>
-			<div class="stat"><span class="lbl">Trick</span><span class="val">{inLevel}/{TASKS_PER_LEVEL}</span></div>
+			<div class="stat"><span class="lbl">Act</span><span class="val"><NumberFlow value={run.level} /></span></div>
+			<div class="stat"><span class="lbl">Trick</span><span class="val"><NumberFlow value={inLevel} suffix="/{TASKS_PER_LEVEL}" /></span></div>
 			<div class="stat">
 				<span class="lbl">Strikes</span>
 				<span class="strikes" aria-label="{run.strikes} of {MAX_STRIKES} strikes">
@@ -62,17 +63,17 @@
 					{/each}
 				</span>
 			</div>
-			<div class="stat right"><span class="lbl">Applause</span><span class="val gold">{run.score}</span></div>
+			<div class="stat right"><span class="lbl">Applause</span><span class="val gold"><NumberFlow value={run.score} /></span></div>
 		</div>
 		<div class="timer" role="img" aria-label="{leftSecs} seconds left">
 			<i></i>
 			<div class="track"><div class="fill" class:low={game.left < 10000} style="width: {leftFrac * 100}%"></div></div>
 			<i></i>
-			<span class="secs">{leftSecs}</span>
+			<span class="secs"><NumberFlow value={leftSecs} /></span>
 		</div>
 	{:else}
 		<div class="stats">
-			<div class="stat"><span class="lbl">Solved</span><span class="val">{game.practice.solved}/{game.practice.played}</span></div>
+			<div class="stat"><span class="lbl">Solved</span><span class="val"><NumberFlowGroup><NumberFlow value={game.practice.solved} /><NumberFlow value={game.practice.played} prefix="/" /></NumberFlowGroup></span></div>
 			<div class="sizes" role="group" aria-label="Board size">
 				{#each Object.keys(SIZES) as s (s)}
 					<button type="button" aria-pressed={app.size === s} onclick={() => setSize(s)}>{s.replace('x', '×')}</button>
@@ -216,7 +217,12 @@
 		color: var(--label);
 	}
 
+	/* NumberFlow pads its digits above and below for the roll's fade (--number-flow-mask-height, 0.25em): held to the
+	   text's height here, the padding overflows, and the layout stays as with plain text */
 	.val {
+		display: flex;
+		align-items: center;
+		height: 24px;
 		font-family: var(--display);
 		font-size: 24px;
 		line-height: 1;
@@ -334,10 +340,14 @@
 	}
 
 	.secs {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		height: 18px;
 		min-width: 26px;
-		text-align: right;
 		font-family: var(--display);
 		font-size: 18px;
+		line-height: 1;
 		font-variant-numeric: tabular-nums;
 	}
 

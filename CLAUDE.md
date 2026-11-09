@@ -41,6 +41,10 @@ felt stays, easing to a new board size meanwhile); the old cards, on their way o
 final-curtain panels slide in from the right and out to the left, and so does the message under the
 board with its buttons, a new one pushing the old out (`STRIP_SLIDE_MS`, 0.4 s). With reduced motion they're instant.
 
+The numbers that change in place roll, by NumberFlow (`@number-flow/svelte`): the act, trick, applause, the clock's
+seconds, and Practice's solved / played. Its digits are padded above and below for the roll's fade; `.val` and `.secs`
+hold them to the text's height, so the padding overflows and the board's room (`BOARD_H`) is unchanged.
+
 ## Rules
 
 - One row or column has been shifted out of place. Drag it back: rows sideways, columns up or down.
