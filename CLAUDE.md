@@ -50,7 +50,8 @@ board with its buttons, a new one pushing the old out (`STRIP_SLIDE_MS`, 0.4 s).
 ## Challenge
 
 Five puzzles per level, three strikes end the run, and strikes reset each level. A wrong shift or
-running out of time is a strike. A wrong shift stops the clock and shows one button, Reset: the board goes back as dealt
+running out of time is a strike. A wrong shift stops the clock and shows one button, Reset: the lane slides back as dealt, the shortest way
+(`RESET_SLIDE_MS`, 0.4 s),
 and the clock runs on from where it stopped, so the trick can still be solved (the designer's call). Running out of time
 ends the trick, showing a fix, with Next trick and Reveal. Each solve scores **seconds left × level**.
 

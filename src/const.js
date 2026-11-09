@@ -15,6 +15,8 @@ export const PAGE_SLIDE_MS = 500;
 // The act and final-curtain panels, and the message and buttons under the board, change by a push too, in this long:
 // the page stays, so it's quicker.
 export const STRIP_SLIDE_MS = 400;
+// Reset slides the wrongly shifted lane back where it was dealt, in this long
+export const RESET_SLIDE_MS = 400;
 
 export const SIZES = { '4x4': [4, 4], '4x5': [4, 5], '5x5': [5, 5] };
 

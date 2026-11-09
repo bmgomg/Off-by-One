@@ -1,4 +1,4 @@
-import { APP_STATE, MAX_STRIKES, SIZES, TASKS_PER_LEVEL } from './const';
+import { APP_STATE, MAX_STRIKES, RESET_SLIDE_MS, SIZES, TASKS_PER_LEVEL } from './const';
 import { RULES, applyMove, badPairs, geometry, levelInfo, makePuzzle, mod, moveText, points } from './logic';
 import { setSound, sfx } from './sound';
 import { reducedMotion, tween } from './utils';
@@ -222,7 +222,7 @@ function commit(m) {
 	game.grid = applyMove(game.grid, game.R, game.C, m);
 	const bad = clashes().length;
 	if (bad === 0) onSolved(m);
-	else onWrong(bad);
+	else onWrong(bad, m);
 }
 
 function onSolved(m) {
@@ -252,7 +252,11 @@ const othersText = () => {
 
 // A wrong shift: the board waits for Reset. In a challenge it's a strike, and the clock stops till then; the third
 // strike ends the run.
-function onWrong(n) {
+// the wrong shift, for Reset to slide back
+let wrongMove = null;
+
+function onWrong(n, m) {
+	wrongMove = m;
 	stopTimer();
 	sfx.lose();
 	flash('lost');
@@ -290,14 +294,30 @@ function strike(reason) {
 /** After a wrong shift: the board as dealt, to try again; a challenge's clock runs on from where it stopped. */
 export function reset() {
 	if (game.busy || game.phase !== 'wrong') return;
-	game.grid = game.puzzle.slice();
-	game.phase = 'play';
-	if (app.mode === 'challenge') {
-		say('Back as it was. The clock runs on.');
-		resumeTimer();
-	} else {
-		say('Back as it was. You still get one shift.');
-	}
+	const m = wrongMove;
+	const n = laneLen(m.axis);
+	// the lane slides back the shortest way: back by what it moved, or on round the rest of the lane if that's less
+	const back = m.steps > n / 2 ? n - m.steps : -m.steps;
+	const puzzle = game.puzzle;
+	game.busy = true;
+	Object.assign(lane, { axis: m.axis, idx: m.idx, d: 0, steps: 0, answer: false });
+	tween(0, back * pitch(m.axis), RESET_SLIDE_MS, (v) => (lane.d = v), () => {
+		// left for Home, or dealt anew, meanwhile
+		if (game.puzzle !== puzzle || app.page !== 'game') {
+			game.busy = false;
+			return;
+		}
+		clearLane();
+		game.grid = puzzle.slice();
+		game.busy = false;
+		game.phase = 'play';
+		if (app.mode === 'challenge') {
+			say('Back as it was. The clock runs on.');
+			resumeTimer();
+		} else {
+			say('Back as it was. Try again.');
+		}
+	});
 }
 
 export function review() {
