@@ -2,10 +2,29 @@
 
 *Shift happens.*
 
-Prototype for the SHIFT jam. Race the Ace's puzzle with a new move: instead of swapping two
-cards, shift one row or column. The lane wraps around, and you get one shift per puzzle.
+A card puzzle for the SHIFT jam: one row or column has slipped out of place. Slide it back.
+The lane wraps around, and you get one shift per puzzle.
 
-Open `index.html` in a browser to play. It is a single file with no build step.
+A SvelteKit app (Svelte 5), built as a static site. The look is "Sleight of Hand": a magician's
+velvet-and-gold stage, on a 450 × 800 page that scales to fit the window.
+
+```sh
+npm install
+npm run dev      # http://localhost:1130
+npm test         # the rules, generator, levels and board sizes
+npm run build    # static site in build/
+```
+
+`prototype/index.html` is the original single-file prototype (no build step); it still has the
+playtest extras ("Start at level", rule and size switches in one place).
+
+## Files
+
+- `src/lib/logic.js`: cards, the two rule sets, puzzle generation, levels, scoring, board geometry (tested in `logic.test.js`).
+- `src/lib/state.svelte.js`: settings (saved), the puzzle and the run, the timer, and moving a lane.
+- `src/lib/Board.svelte`: the cards, dragging with the wrap copy, keyboard, clash marks.
+- `src/lib/Game.svelte`, `src/lib/Home.svelte`: the two pages. `src/lib/sound.js`: synthesized effects.
+- `src/lib/cards/`: the deck (52 webp faces with transparent backgrounds; the board paints the ivory face).
 
 ## Rules
 
@@ -31,9 +50,10 @@ running out of time is a strike. Each solve scores **seconds left × level**.
 | 7+ | 5×5 | 3 fewer per level, down to 3 (level 15) |
 
 The clock has no playable floor, so every run ends. Tune `LEVELS`, `DECAY_SECS` and `MIN_SECS`
-in `index.html`. "Start at level" in settings is a playtest shortcut.
+in `src/lib/logic.js`. In the app's theme a level is an "act", a puzzle a "trick", the score "applause".
 
-Practice has no timer, lets you undo a wrong shift, can show the answer, and can mark clashes.
+Practice has no timer and a board-size choice; it lets you undo a wrong shift, reveal the answer,
+and mark clashes.
 
 ## Design notes
 
@@ -53,5 +73,4 @@ Simulated rule sets (one random shift applied to a valid grid, 200–300 puzzles
 ## Open questions
 
 - Lowest playable time limit, and whether to drop 3 or 5 seconds per level, or a percentage.
-- Real Race the Ace card art in place of the drawn faces.
-- Port to Svelte on top of the Race the Ace codebase for the jam build.
+- Not yet in the app: music, offline play (PWA), resuming a run after Back, a playtest level jump.

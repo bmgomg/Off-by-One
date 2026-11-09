@@ -1,0 +1,490 @@
+<script>
+	import { fade, scale } from 'svelte/transition';
+	import Board from './Board.svelte';
+	import { MAX_STRIKES, RULES, SIZES, TASKS_PER_LEVEL, levelInfo } from './logic.js';
+	import {
+		app,
+		game,
+		goHome,
+		levelSecs,
+		newDeal,
+		newRun,
+		next,
+		review,
+		setSize,
+		showAnswer,
+		startPlay,
+		toggleSound,
+		undo
+	} from './state.svelte.js';
+
+	const challenge = $derived(app.mode === 'challenge');
+	const run = $derived(game.run);
+	const inLevel = $derived(
+		game.phase === 'play' || game.phase === 'ready' ? (run.tasks % TASKS_PER_LEVEL) + 1 : ((run.tasks - 1) % TASKS_PER_LEVEL) + 1
+	);
+	const total = $derived(levelSecs() * 1000);
+	const leftFrac = $derived(Math.max(0, Math.min(1, game.left / total)));
+	const leftSecs = $derived(Math.ceil(game.left / 1000));
+	const best = $derived(app.best[app.rule] || 0);
+
+	// What the level prompt says changed.
+	const prompt = $derived.by(() => {
+		const L = run.level;
+		const info = levelInfo(L);
+		const prev = levelInfo(Math.max(1, L - 1));
+		const size = info.size.replace('x', '×');
+		if (run.tasks === 0) return { lines: [`The board: ${size}, ${info.secs} seconds per trick.`, 'A wrong shift or running out of time earns a strike. Three strikes end the show.', 'Each solve scores seconds left × level.'], button: 'Curtain up' };
+		const lines = ['Your strikes have been reset.'];
+		if (prev.size !== info.size) lines.unshift(`The board grows to ${size}.`);
+		if (prev.secs !== info.secs) lines.push(`You now have ${info.secs} seconds per trick.`);
+		return { lines, button: 'Continue' };
+	});
+</script>
+
+<div class="game">
+	<div class="title">Off <span class="by">by</span> One</div>
+
+	{#if challenge}
+		<div class="stats">
+			<div class="stat"><span class="lbl">Act</span><span class="val">{run.level}</span></div>
+			<div class="stat"><span class="lbl">Trick</span><span class="val">{inLevel}/{TASKS_PER_LEVEL}</span></div>
+			<div class="stat">
+				<span class="lbl">Strikes</span>
+				<span class="strikes" aria-label="{run.strikes} of {MAX_STRIKES} strikes">
+					{#each { length: MAX_STRIKES } as _, i (i)}
+						<span class="strike" class:spent={i < run.strikes}>{i < run.strikes ? '✕' : ''}</span>
+					{/each}
+				</span>
+			</div>
+			<div class="stat right"><span class="lbl">Applause</span><span class="val gold">{run.score}</span></div>
+		</div>
+		<div class="timer" role="img" aria-label="{leftSecs} seconds left">
+			<i></i>
+			<div class="track"><div class="fill" class:low={game.left < 10000} style="width: {leftFrac * 100}%"></div></div>
+			<i></i>
+			<span class="secs">{leftSecs}</span>
+		</div>
+	{:else}
+		<div class="stats">
+			<div class="stat"><span class="lbl">Solved</span><span class="val">{game.practice.solved}/{game.practice.played}</span></div>
+			<div class="sizes" role="group" aria-label="Board size">
+				{#each Object.keys(SIZES) as s (s)}
+					<button type="button" aria-pressed={app.size === s} onclick={() => setSize(s)}>{s.replace('x', '×')}</button>
+				{/each}
+			</div>
+			<label class="clashes"><input type="checkbox" bind:checked={game.showClashes} /> Clashes</label>
+		</div>
+		<div class="rule">{RULES[app.rule].text}</div>
+	{/if}
+
+	<div class="table">
+		<div class="felt" class:won={game.flash === 'won'} class:lost={game.flash === 'lost'}>
+			<Board />
+		</div>
+
+		{#if challenge && game.phase === 'ready'}
+			<div class="overlay" transition:fade={{ duration: 180 }}>
+				<div class="panel" in:scale={{ start: 0.92, duration: 220 }}>
+					<h2>Act {run.level}</h2>
+					<ul>
+						{#each prompt.lines as line, n (n)}<li>{line}</li>{/each}
+					</ul>
+					<button type="button" class="btn primary" onclick={startPlay}>{prompt.button}</button>
+				</div>
+			</div>
+		{:else if game.phase === 'over' && !game.reviewing}
+			<div class="overlay" transition:fade={{ duration: 180 }}>
+				<div class="panel" in:scale={{ start: 0.92, duration: 220 }}>
+					<h2>Final curtain</h2>
+					<div class="big">{run.score}</div>
+					<p>{run.solved} of {run.tasks} tricks solved, reached act {run.level}. {run.newBest ? 'A new best!' : `Best: ${best}.`}</p>
+					<div class="row">
+						<button type="button" class="btn primary" onclick={newRun}>Encore</button>
+						<button type="button" class="btn" onclick={review}>See the board</button>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</div>
+
+	<p class="msg {game.msg.tone}" aria-live="polite">{game.msg.text}</p>
+
+	<div class="actions">
+		{#if game.phase === 'failed'}
+			{#if challenge}
+				<button type="button" class="btn small primary" onclick={next}>Next trick</button>
+			{:else}
+				<button type="button" class="btn small primary" onclick={undo}>Undo</button>
+			{/if}
+			<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
+		{:else if game.phase === 'solved' || game.phase === 'revealed'}
+			<button type="button" class="btn small primary" onclick={next}>Next trick</button>
+		{:else if game.phase === 'over' && game.reviewing}
+			<button type="button" class="btn small primary" onclick={newRun}>Encore</button>
+			<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
+		{/if}
+	</div>
+
+	<nav class="toolbar">
+		<button type="button" onclick={goHome}>Back</button>
+		{#if challenge}
+			<button type="button" onclick={newRun}>New Show</button>
+		{:else}
+			<button type="button" onclick={newDeal}>New Deal</button>
+		{/if}
+		<button type="button" onclick={toggleSound}>Sound {app.sound ? 'On' : 'Off'}</button>
+	</nav>
+</div>
+
+<style>
+	.game {
+		height: 100%;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 30px 24px 0;
+		gap: 8px;
+	}
+
+	.title {
+		font-family: var(--display);
+		font-size: 30px;
+		line-height: 1;
+		color: var(--gold-hi);
+	}
+
+	.by {
+		display: inline-block;
+		font-size: 21px;
+		transform: translateY(4px);
+	}
+
+	.stats {
+		width: 100%;
+		min-height: 46px;
+		box-sizing: border-box;
+		padding: 0 14px;
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+	}
+
+	.stat {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.stat.right {
+		align-items: flex-end;
+	}
+
+	.lbl {
+		font-family: var(--caps);
+		font-weight: 600;
+		font-size: 14px;
+		letter-spacing: 2px;
+		color: var(--label);
+	}
+
+	.val {
+		font-family: var(--display);
+		font-size: 24px;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.val.gold {
+		color: var(--gold-hi);
+	}
+
+	.strikes {
+		display: flex;
+		gap: 5px;
+		padding-top: 4px;
+	}
+
+	.strike {
+		width: 15px;
+		height: 21px;
+		border-radius: 2px;
+		background: repeating-linear-gradient(45deg, #6e1a2a 0 3px, #4a0f1c 3px 6px);
+		box-shadow: inset 0 0 0 1px #c9a24f;
+		display: grid;
+		place-items: center;
+		font-size: 13px;
+		font-weight: 700;
+		line-height: 1;
+		color: var(--red);
+		transition: background 0.3s;
+	}
+
+	.strike.spent {
+		background: var(--card);
+	}
+
+	.sizes {
+		display: flex;
+		gap: 4px;
+		font-family: var(--caps);
+		font-weight: 600;
+		font-size: 15px;
+	}
+
+	.sizes button,
+	.clashes {
+		min-height: 34px;
+		padding: 0 10px;
+		border: 1px solid var(--gold-faint);
+		border-radius: 17px;
+		background: none;
+		color: var(--label);
+		cursor: pointer;
+	}
+
+	.sizes button[aria-pressed='true'] {
+		border-color: var(--gold);
+		color: var(--gold-pale);
+		background: rgba(216, 180, 100, 0.12);
+	}
+
+	.clashes {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-family: var(--caps);
+		font-weight: 600;
+		font-size: 15px;
+		box-sizing: border-box;
+	}
+
+	.clashes input {
+		accent-color: var(--gold);
+		margin: 0;
+	}
+
+	.rule {
+		min-height: 22px;
+		font-style: italic;
+		font-size: 17px;
+		color: var(--label);
+	}
+
+	.timer {
+		width: 100%;
+		min-height: 22px;
+		box-sizing: border-box;
+		padding: 0 14px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.timer i {
+		width: 7px;
+		height: 7px;
+		background: var(--gold);
+		transform: rotate(45deg);
+	}
+
+	.track {
+		flex: 1;
+		height: 3px;
+		background: rgba(216, 180, 100, 0.22);
+	}
+
+	.fill {
+		height: 100%;
+		background: var(--gold-hi);
+		box-shadow: 0 0 8px rgba(230, 198, 119, 0.6);
+	}
+
+	.fill.low {
+		background: var(--bad);
+		box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
+	}
+
+	.secs {
+		min-width: 26px;
+		text-align: right;
+		font-family: var(--display);
+		font-size: 18px;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.table {
+		position: relative;
+		width: 100%;
+		height: 440px;
+		display: grid;
+		place-items: center;
+		flex: none;
+	}
+
+	.felt {
+		padding: 10px;
+		background: #120609;
+		border: 1px solid var(--gold);
+		outline: 1px solid rgba(216, 180, 100, 0.35);
+		outline-offset: 4px;
+		box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6);
+		transition:
+			border-color 0.3s,
+			box-shadow 0.3s;
+	}
+
+	.felt.won {
+		border-color: var(--gold-pale);
+		box-shadow:
+			0 0 34px rgba(243, 220, 156, 0.45),
+			0 18px 36px rgba(0, 0, 0, 0.6);
+	}
+
+	.felt.lost {
+		border-color: var(--bad);
+	}
+
+	.overlay {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		z-index: 5;
+	}
+
+	.panel {
+		width: 300px;
+		box-sizing: border-box;
+		padding: 22px 24px;
+		background: var(--velvet);
+		border: 1px solid var(--gold);
+		outline: 1px solid rgba(216, 180, 100, 0.35);
+		outline-offset: 4px;
+		box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 14px;
+		text-align: center;
+	}
+
+	.panel h2 {
+		margin: 0;
+		font-family: var(--display);
+		font-weight: 400;
+		font-size: 34px;
+		color: var(--gold-hi);
+	}
+
+	.panel ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		font-size: 19px;
+		line-height: 1.3;
+		color: var(--cream);
+	}
+
+	.panel p {
+		margin: 0;
+		font-size: 19px;
+		line-height: 1.3;
+		color: var(--cream);
+	}
+
+	.big {
+		font-family: var(--display);
+		font-size: 52px;
+		line-height: 1;
+		color: var(--gold-pale);
+	}
+
+	.row {
+		display: flex;
+		gap: 12px;
+	}
+
+	.msg {
+		margin: 0;
+		min-height: 48px;
+		max-width: 380px;
+		font-style: italic;
+		font-size: 19px;
+		line-height: 1.25;
+		color: var(--cream);
+		text-align: center;
+	}
+
+	.msg.good {
+		color: var(--good);
+	}
+
+	.msg.bad {
+		color: #ffb3a8;
+	}
+
+	.actions {
+		min-height: 42px;
+		display: flex;
+		gap: 12px;
+	}
+
+	.btn {
+		min-width: 132px;
+		height: 50px;
+		padding: 0 16px;
+		border-radius: 4px;
+		border: 1px solid var(--gold);
+		outline: 1px solid rgba(216, 180, 100, 0.4);
+		outline-offset: 3px;
+		background: transparent;
+		color: var(--gold-hi);
+		font-family: var(--display);
+		font-size: 18px;
+		cursor: pointer;
+		transition: transform 0.12s;
+	}
+
+	.btn:active {
+		transform: scale(0.97);
+	}
+
+	.btn.small {
+		height: 42px;
+		min-width: 120px;
+		font-size: 17px;
+	}
+
+	.btn.primary {
+		border-color: var(--gold-pale);
+		background: linear-gradient(180deg, #e8c97c, #b68c3c);
+		color: var(--velvet);
+	}
+
+	.toolbar {
+		margin-top: auto;
+		width: calc(100% - 20px);
+		box-sizing: border-box;
+		display: flex;
+		justify-content: space-around;
+		border-top: 1px solid var(--gold-faint);
+		padding: 10px 6px 24px;
+	}
+
+	.toolbar button {
+		min-height: 44px;
+		padding: 0 8px;
+		background: none;
+		border: 0;
+		color: #d9c79e;
+		font-family: var(--caps);
+		font-weight: 600;
+		font-size: 17px;
+		letter-spacing: 2px;
+		cursor: pointer;
+	}
+</style>
