@@ -85,6 +85,22 @@
 		border: 1px solid var(--gold-faint);
 	}
 
+	/* Rounded only while it floats free, with room all round, as Dark Matter's: the page never grows past 450 × 800, and
+	   in a window no bigger it touches an edge, where rounded corners look cut off. The gold lines follow the curve. */
+	@media (min-width: 451px) and (min-height: 801px) {
+		.page {
+			border-radius: 18px;
+		}
+
+		.outer {
+			border-radius: 12px;
+		}
+
+		.inner {
+			border-radius: 8px;
+		}
+	}
+
 	.view {
 		position: absolute;
 		inset: 0;

@@ -47,6 +47,12 @@
 		if (game.running) statsOpen = false;
 	});
 	const st = $derived(app.stats);
+	// nothing for a reset to clear: Practice's tally already as a reset leaves it (a puzzle under way counts as played),
+	// or no Challenge stats yet
+	const practiceClear = $derived(
+		game.practice.solved === 0 && game.practice.played === (['play', 'wrong'].includes(game.phase) ? 1 : 0)
+	);
+	const statsClear = $derived(st.shows === 0 && !st.best);
 	const STATS = $derived([
 		['Shows', st.shows],
 		['Average applause', st.shows ? Math.round(st.total / st.shows) : '—'],
@@ -158,7 +164,9 @@
 						{/each}
 					</dl>
 					<div class="row">
-						<button type="button" class="btn small" onclick={tapThen(() => (resetStats(), (statsOpen = false)))}>Reset stats</button>
+						<button type="button" class="btn small" disabled={statsClear} onclick={tapThen(() => (resetStats(), (statsOpen = false)))}
+							>Reset stats</button
+						>
 						<button type="button" class="btn small primary" onclick={tapThen(() => (statsOpen = false))}>Close</button>
 					</div>
 				</div>
@@ -211,7 +219,9 @@
 						<button type="button" class="btn small primary" onclick={next}>Next trick</button>
 						<button type="button" class="btn small" onclick={tapThen(showAnswer)}>Reveal</button>
 					{:else if game.phase === 'solved' || game.phase === 'revealed'}
-						<button type="button" class="btn small primary" onclick={next}>Next trick</button>
+						<!-- the way on, named as the toolbar names it in Practice (the same action: two of a name confuse less
+						     than one action under two names) -->
+						<button type="button" class="btn small primary" onclick={next}>{challenge ? 'Next trick' : 'New Deal'}</button>
 					{:else if game.phase === 'over' && game.reviewing}
 						<button type="button" class="btn small primary" onclick={tapThen(newRun)}>Encore</button>
 						{#if unsolved}
@@ -236,7 +246,7 @@
 			<button type="button" disabled={game.running} onclick={tapThen(() => (statsOpen = !statsOpen))}>Stats</button>
 		{:else}
 			<!-- Practice's only stat is the Solved tally above, so nothing to show: it clears at once -->
-			<button type="button" onclick={tapThen(resetPractice)}>Reset Stats</button>
+			<button type="button" disabled={practiceClear} onclick={tapThen(resetPractice)}>Reset Stats</button>
 		{/if}
 	</nav>
 </div>
@@ -568,6 +578,8 @@
 		padding: 5px;
 		background: #120609;
 		border: 1px solid var(--gold);
+		/* a little rounded, as the cards on it are */
+		border-radius: 8px;
 		box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6);
 		/* the size as slideX moves: cubicInOut */
 		transition:
@@ -632,6 +644,8 @@
 		border: 1px solid var(--gold);
 		outline: 1px solid rgba(216, 180, 100, 0.35);
 		outline-offset: 4px;
+		/* rounded as the felt is; the outline follows the curve */
+		border-radius: 8px;
 		box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7);
 		display: flex;
 		flex-direction: column;
@@ -737,6 +751,11 @@
 		min-height: 42px;
 		display: flex;
 		gap: 12px;
+	}
+
+	.btn:disabled {
+		opacity: 0.4;
+		pointer-events: none;
 	}
 
 	.btn {
