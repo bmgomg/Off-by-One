@@ -6,6 +6,7 @@
 	import { RULE_TEXT, levelInfo } from './logic';
 	import {
 		app,
+		clashes,
 		game,
 		geo,
 		goHome,
@@ -36,6 +37,8 @@
 	const leftFrac = $derived(Math.max(0, Math.min(1, game.left / total)));
 	const leftSecs = $derived(Math.ceil(game.left / 1000));
 	const best = $derived(app.best);
+	// whether there's anything for Reveal to show: not once the board is right (after a Reveal)
+	const unsolved = $derived(clashes().length > 0);
 	// the message and buttons under the board change as one, by a push; a paused game's wait under its panel
 	const strip = $derived(`${game.phase} ${game.reviewing} ${game.msg.text} ${!!game.paused}`);
 
@@ -79,7 +82,7 @@
 				<span class="lbl">Strikes</span>
 				<span class="strikes" aria-label="{run.strikes} of {MAX_STRIKES} strikes">
 					{#each { length: MAX_STRIKES } as _, i (i)}
-						<span class="strike" class:spent={i < run.strikes}>{i < run.strikes ? '✕' : ''}</span>
+						<span class="strike" class:spent={i < run.strikes}></span>
 					{/each}
 				</span>
 			</div>
@@ -179,7 +182,9 @@
 						<button type="button" class="btn small primary" onclick={next}>Next trick</button>
 					{:else if game.phase === 'over' && game.reviewing}
 						<button type="button" class="btn small primary" onclick={tapThen(newRun)}>Encore</button>
-						<button type="button" class="btn small" onclick={tapThen(showAnswer)}>Reveal</button>
+						{#if unsolved}
+							<button type="button" class="btn small" onclick={tapThen(showAnswer)}>Reveal</button>
+						{/if}
 					{/if}
 				</div>
 			</div>
@@ -301,17 +306,31 @@
 		border-radius: 2px;
 		background: repeating-linear-gradient(45deg, #6e1a2a 0 3px, #4a0f1c 3px 6px);
 		box-shadow: inset 0 0 0 1px #c9a24f;
-		display: grid;
-		place-items: center;
-		font-size: 13px;
-		font-weight: 700;
-		line-height: 1;
-		color: var(--red);
+		position: relative;
 		transition: background 0.3s;
 	}
 
 	.strike.spent {
 		background: var(--card);
+	}
+
+	/* the cross: two bars crossing at the card's middle (a ✕ glyph sat off centre, by its font's metrics) */
+	.strike.spent::before,
+	.strike.spent::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 2px;
+		height: 13px;
+		margin: -6.5px 0 0 -1px;
+		border-radius: 1px;
+		background: var(--red);
+		transform: rotate(40deg);
+	}
+
+	.strike.spent::after {
+		transform: rotate(-40deg);
 	}
 
 	.sizes {

@@ -68,6 +68,13 @@ export const sfx = {
 		tone(196, 0.28, 'sawtooth', 0.04);
 		tone(147, 0.35, 'sawtooth', 0.035, 0.12);
 	},
+	// the clock running out: three quick ticks, then a low bell (a wrong shift has `lose`)
+	timeUp: () => {
+		[0, 0.09, 0.18].forEach((when) => tone(2400, 0.03, 'square', 0.025, when));
+		tone(330, 0.9, 'sine', 0.12, 0.3);
+		tone(495, 0.7, 'sine', 0.06, 0.3);
+		tone(660, 0.5, 'sine', 0.03, 0.3);
+	},
 	fanfare: () => {
 		[523, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, 'triangle', 0.07, i * 0.11));
 	}

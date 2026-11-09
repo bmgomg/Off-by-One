@@ -70,7 +70,8 @@ Five puzzles per level, three strikes end the run, and strikes reset each level.
 running out of time is a strike. A wrong shift stops the clock and shows one button, Reset: the lane slides back as dealt, the shortest way
 (`RESET_SLIDE_MS`, 0.4 s),
 and the clock runs on from where it stopped, so the trick can still be solved (the designer's call). Running out of time
-ends the trick, showing a fix, with Next trick and Reveal. Each solve scores **seconds left × level** (the act panel: "You score the seconds left on the clock, times the act number.").
+ends the trick, with Next trick and Reveal. Messages never spell out the fix (the designer's call): Reveal shows it on
+the board ("That's the trick."), and goes once the board is right. Each solve scores **seconds left × level** (the act panel: "You score the seconds left on the clock, times the act number.").
 
 | Level | Board | Seconds per puzzle |
 |---|---|---|

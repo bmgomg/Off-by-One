@@ -324,11 +324,6 @@ function onSolved(m) {
 	say(`Bravo. ${left}s left × level ${game.run.level} = +${pts}`, 'good');
 }
 
-const othersText = () => {
-	const k = game.solutions.length - 1;
-	return k > 0 ? ` (or ${k} other${k > 1 ? 's' : ''})` : '';
-};
-
 // A wrong shift: the board waits for Reset. In a challenge it's a strike, and the clock stops till then; the third
 // strike ends the run.
 // the wrong shift, for Reset to slide back
@@ -344,7 +339,7 @@ function onWrong(n, m) {
 		game.run.strikes++;
 		if (game.run.strikes >= MAX_STRIKES) {
 			taskDone();
-			say(`${clash} One fix: ${moveText(game.solutions[0], game.R, game.C)}${othersText()}.`, 'bad');
+			say(clash, 'bad');
 			return;
 		}
 		say(`${clash} That's a strike.`, 'bad');
@@ -358,7 +353,7 @@ function onTimeout() {
 	stopTimer();
 	clearLane();
 	game.busy = false;
-	sfx.lose();
+	sfx.timeUp();
 	flash('lost');
 	strike("Time's up.");
 }
@@ -367,15 +362,18 @@ function strike(reason) {
 	game.run.strikes++;
 	const over = taskDone();
 	if (!over) game.phase = 'failed';
-	say(`${reason} One fix: ${moveText(game.solutions[0], game.R, game.C)}${othersText()}.`, 'bad');
+	say(reason, 'bad');
 }
 
 /** After a wrong shift: the board as dealt, to try again; a challenge's clock runs on from where it stopped. */
-export function reset() {
-	if (game.busy || game.phase !== 'wrong') return;
+const sameGrid = (a, b) => a.length === b.length && a.every((c, i) => c === b[i]);
+
+/** Slides the wrong shift's lane back where it was dealt, the shortest way: back by what it moved, or on round the rest
+ *  of the lane if that's less. Then the board is the puzzle again, and `then` runs (unless the player left meanwhile).
+ *  Keeps the board busy throughout. */
+function slideBack(then) {
 	const m = wrongMove;
 	const n = laneLen(m.axis);
-	// the lane slides back the shortest way: back by what it moved, or on round the rest of the lane if that's less
 	const back = m.steps > n / 2 ? n - m.steps : -m.steps;
 	const puzzle = game.puzzle;
 	game.busy = true;
@@ -388,6 +386,13 @@ export function reset() {
 		}
 		clearLane();
 		game.grid = puzzle.slice();
+		then();
+	});
+}
+
+export function reset() {
+	if (game.busy || game.phase !== 'wrong') return;
+	slideBack(() => {
 		game.busy = false;
 		game.phase = 'play';
 		if (app.mode === 'challenge') {
@@ -409,8 +414,19 @@ export function showAnswer() {
 	const n = laneLen(m.axis);
 	const steps = m.steps > n / 2 ? m.steps - n : m.steps;
 	const puzzle = game.puzzle;
+	// the board has just shown the move: the message doesn't spell it out
+	const told = () => say("That's the trick.");
+	// already showing the answer (Reveal again, on the final curtain's board): nothing to move
+	if (sameGrid(game.grid, applyMove(puzzle, game.R, game.C, m))) return told();
+	// a wrong shift on the board (the last strike's): it slides back first, rather than snapping
+	if (wrongMove && sameGrid(game.grid, applyMove(puzzle, game.R, game.C, wrongMove))) return slideBack(() => slideAnswer(m, steps, puzzle, told));
 	game.grid = puzzle.slice();
 	game.busy = true;
+	slideAnswer(m, steps, puzzle, told);
+}
+
+/** After a moment, slides the answer's lane from the puzzle to solved. */
+function slideAnswer(m, steps, puzzle, told) {
 	setTimeout(
 		() => {
 			if (!stillOn(puzzle)) return;
@@ -421,7 +437,7 @@ export function showAnswer() {
 				game.grid = applyMove(game.grid, game.R, game.C, m);
 				game.busy = false;
 				if (game.phase !== 'over') game.phase = 'revealed';
-				say(`The trick: ${moveText(m, game.R, game.C)}${othersText()}.`);
+				told();
 			});
 		},
 		reducedMotion() ? 0 : 250
