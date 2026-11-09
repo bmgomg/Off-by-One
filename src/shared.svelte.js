@@ -12,9 +12,13 @@ export const app = $state({
 	size: '4x5',
 	sound: true,
 	music: true,
-	// the best Challenge score
-	best: 0
+	// Challenge's record, of shows that have ended: how many, their applause in all, the best, the furthest act
+	stats: newStats()
 });
+
+export function newStats() {
+	return { shows: 0, total: 0, best: 0, furthest: 0 };
+}
 
 // Called once Home is up, after the splash, so a tap on the splash (which wipes the save) comes first.
 let loaded = false;
@@ -32,14 +36,16 @@ export function loadSettings() {
 	app.sound = saved.sound !== false;
 	app.music = saved.music !== false;
 	// saved per rule while there were two: the rank gap's carries over
-	app.best = typeof saved.best === 'number' ? saved.best : saved.best?.gap || 0;
+	app.stats = { ...newStats(), ...saved.stats };
+	// from before the stats: the best score alone (kept per rule while there were two: the rank gap's carries over)
+	if (!saved.stats && saved.best) app.stats.best = typeof saved.best === 'number' ? saved.best : saved.best.gap || 0;
 	setSound(app.sound);
 	setMusic(app.music, false);
 }
 
 export function save() {
 	try {
-		localStorage.setItem(KEY, JSON.stringify({ size: app.size, sound: app.sound, music: app.music, best: app.best }));
+		localStorage.setItem(KEY, JSON.stringify({ size: app.size, sound: app.sound, music: app.music, stats: app.stats }));
 	} catch {
 		// storage can be unavailable (private mode); settings then last for the session
 	}
@@ -286,11 +292,15 @@ function taskDone() {
 	r.tasks++;
 	if (r.strikes >= MAX_STRIKES) {
 		game.phase = 'over';
-		if (r.score > app.best) {
-			app.best = r.score;
+		const st = app.stats;
+		st.shows++;
+		st.total += r.score;
+		st.furthest = Math.max(st.furthest, r.level);
+		if (r.score > st.best) {
+			st.best = r.score;
 			r.newBest = true;
-			save();
 		}
+		save();
 		return true;
 	}
 	if (r.tasks % TASKS_PER_LEVEL === 0) r.pendingLevel = true;
@@ -501,6 +511,17 @@ export function toggleSound() {
 	setSound(app.sound);
 	save();
 	if (app.sound) sfx.tap();
+}
+
+/** Challenge's record, from scratch (a show under way counts when it ends). */
+export function resetStats() {
+	app.stats = newStats();
+	save();
+}
+
+/** Practice's tally, from scratch; a puzzle under way still counts as played. */
+export function resetPractice() {
+	game.practice = { solved: 0, played: ['play', 'wrong'].includes(game.phase) ? 1 : 0 };
 }
 
 export function toggleMusic() {

@@ -22,7 +22,9 @@
 		toggleSound,
 		reset,
 		resume,
-		saveGame
+		saveGame,
+		resetPractice,
+		resetStats
 	} from './shared.svelte';
 	import { sfx } from './sound';
 	import { pushIn, pushOut, slideX } from './utils';
@@ -36,7 +38,21 @@
 	const total = $derived(levelSecs() * 1000);
 	const leftFrac = $derived(Math.max(0, Math.min(1, game.left / total)));
 	const leftSecs = $derived(Math.ceil(game.left / 1000));
-	const best = $derived(app.best);
+	const best = $derived(app.stats.best);
+
+	// Challenge's stats card, over the board; only while the clock is stopped (opened mid-trick, it would eat the clock or
+	// show the board for free), so the clock starting puts it away
+	let statsOpen = $state(false);
+	$effect(() => {
+		if (game.running) statsOpen = false;
+	});
+	const st = $derived(app.stats);
+	const STATS = $derived([
+		['Shows', st.shows],
+		['Average applause', st.shows ? Math.round(st.total / st.shows) : '—'],
+		['Best applause', st.shows || st.best ? st.best : '—'],
+		['Furthest act', st.furthest || '—']
+	]);
 	// whether there's anything for Reveal to show: not once the board is right (after a Reveal)
 	const unsolved = $derived(clashes().length > 0);
 	// the message and buttons under the board change as one, by a push; a paused game's wait under its panel
@@ -131,7 +147,23 @@
 		</div>
 		<div class="below"></div>
 
-		{#if game.paused}
+		{#if statsOpen}
+			<div class="overlay">
+				<div class="panel" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
+					<h2>Stats</h2>
+					<dl class="stats-list">
+						{#each STATS as [label, value] (label)}
+							<dt>{label}</dt>
+							<dd>{value}</dd>
+						{/each}
+					</dl>
+					<div class="row">
+						<button type="button" class="btn small" onclick={tapThen(() => (resetStats(), (statsOpen = false)))}>Reset stats</button>
+						<button type="button" class="btn small primary" onclick={tapThen(() => (statsOpen = false))}>Close</button>
+					</div>
+				</div>
+			</div>
+		{:else if game.paused}
 			<!-- a game come back to, its board face down till Resume, as in Race the Ace -->
 			<div class="overlay">
 				<div class="panel" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
@@ -192,7 +224,7 @@
 	</div>
 
 	<!-- every label on one line, and the toggles as wide either way, so nothing moves when one changes -->
-	<nav class="toolbar">
+	<nav class="toolbar" class:stacked={!challenge}>
 		<button type="button" onclick={tapThen(goHome)}>Back</button>
 		{#if !challenge}
 			<button type="button" onclick={newDeal}>New Deal</button>
@@ -200,8 +232,11 @@
 		<button type="button" onclick={toggleSound}>SFX {@render state(app.sound)}</button>
 		<button type="button" onclick={tapThen(toggleMusic)}>Music {@render state(app.music)}</button>
 		{#if challenge}
-			<!-- for the stats card, still to come -->
-			<button type="button" onclick={sfx.tap}>Stats</button>
+			<!-- not while the clock runs -->
+			<button type="button" disabled={game.running} onclick={tapThen(() => (statsOpen = !statsOpen))}>Stats</button>
+		{:else}
+			<!-- Practice's only stat is the Solved tally above, so nothing to show: it clears at once -->
+			<button type="button" onclick={tapThen(resetPractice)}>Reset Stats</button>
 		{/if}
 	</nav>
 </div>
@@ -553,6 +588,34 @@
 		border-color: var(--bad);
 	}
 
+	/* the stats card's figures: a label on the left, its number on the right, each row */
+	.stats-list {
+		margin: 0;
+		width: 100%;
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 10px 16px;
+		font-size: 19px;
+		line-height: 1.2;
+		text-align: left;
+	}
+
+	.stats-list dt {
+		color: var(--cream);
+	}
+
+	.stats-list dd {
+		margin: 0;
+		font-family: var(--display);
+		color: var(--gold-hi);
+		text-align: right;
+	}
+
+	.toolbar button:disabled {
+		opacity: 0.4;
+		pointer-events: none;
+	}
+
 	.overlay {
 		position: absolute;
 		inset: 0;
@@ -624,9 +687,14 @@
 		color: var(--gold-pale);
 	}
 
+	/* a panel's buttons side by side, each label on one line */
 	.row {
 		display: flex;
 		gap: 12px;
+	}
+
+	.row .btn {
+		white-space: nowrap;
 	}
 
 	/* from the board down to the toolbar's divider (the negative margin takes up the page's gap above the toolbar), at
@@ -721,7 +789,6 @@
 		color: #d9c79e;
 		font-family: var(--caps);
 		font-weight: 600;
-		/* five labels on one line in the toolbar's 406 px (323 px of words at this size) */
 		font-size: 16px;
 		letter-spacing: 1.5px;
 		white-space: nowrap;
@@ -731,6 +798,14 @@
 			color 0.2s,
 			text-shadow 0.2s,
 			transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+
+	/* Practice's five: each two-word label on two lines, always (a toggle's second word keeps its room either way), so
+	   they keep the size of Challenge's four, which fit on one */
+	.toolbar.stacked button {
+		width: min-content;
+		white-space: normal;
+		line-height: 1.1;
 	}
 
 	.state {

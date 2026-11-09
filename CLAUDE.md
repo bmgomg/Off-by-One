@@ -91,8 +91,21 @@ there's no Reveal in Practice any more.
 
 ## Toolbar
 
-Back, New Deal (Practice), SFX On/Off, Music On/Off, Stats (Challenge; for the stats card, still to come). Each label
-is on one line, and a toggle's word keeps the room of the longer of On and Off, so nothing moves when one changes.
+Back, New Deal (Practice), SFX On/Off, Music On/Off, then Stats in Challenge or Reset Stats in Practice. At 16 px,
+Challenge's four labels are on one line; Practice's five each take two lines when they're two words (all but Back),
+always, so they keep that size. A toggle's word keeps the room of the longer of On and Off, so nothing moves when one
+changes.
+
+## Stats
+
+- **Practice:** the Solved tally (solved / played) is all there is, so its button is Reset Stats, which clears it at
+  once, with no card and no confirmation (the designer's call: it's benign). A puzzle under way still counts as played.
+- **Challenge:** Stats opens a card over the board (sliding in like the act panel) with Shows, Average applause, Best
+  applause and Furthest act, of shows that have ended (`app.stats`, saved with the settings; a best score saved before
+  the stats carries over). Tricks solved aren't counted (the designer's call). Two buttons: Reset stats, which also
+  closes the card, with no confirmation (the designer's call), and Close. Stats is disabled while the clock runs (a
+  card mid-trick would eat the clock or show the board for free), and the clock starting puts the card away. A show
+  under way counts when it ends, after a reset too.
 
 ## Music
 
