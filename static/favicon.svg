@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-	<rect width="64" height="64" rx="12" fill="#2b0b13"/>
-	<rect x="5" y="5" width="54" height="54" rx="8" fill="none" stroke="#d8b464" stroke-width="2"/>
-	<g transform="rotate(-14 22 36)"><rect x="12" y="20" width="20" height="28" rx="3" fill="#fffaf0"/></g>
-	<g transform="rotate(14 42 36)"><rect x="32" y="20" width="20" height="28" rx="3" fill="#fffaf0"/></g>
-	<rect x="22" y="12" width="20" height="28" rx="3" fill="#fffaf0" stroke="#d8b464" stroke-width="2"/>
-	<path d="M32 21c-2-3-6-1-5 2 0 3 5 6 5 6s5-3 5-6c1-3-3-5-5-2z" fill="#a01d2d"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><radialGradient id="velvet" cx="30%" cy="0%" r="110%"><stop offset="0" stop-color="#5a1626"/><stop offset="0.6" stop-color="#2b0b13"/><stop offset="1" stop-color="#17050a"/></radialGradient><clipPath id="inside"><rect x="7" y="7" width="50" height="50"/></clipPath><path id="heart" d="M0-1c-.48-.76-1.68-.48-1.56.43.1.76 1.56 1.76 1.56 1.76s1.46-1 1.56-1.76c.12-.91-1.08-1.19-1.56-.43z"/><path id="spade" d="M0-1.6s-1.6 1.18-1.6 2.08c0 .52.48.85.9.85.24 0 .44-.09.55-.24-.04.41-.24.7-.5.94h1.3c-.26-.24-.46-.53-.5-.94.11.15.31.24.55.24.42 0 .9-.33.9-.85 0-.9-1.6-2.08-1.6-2.08z"/></defs><rect width="64" height="64" rx="12" fill="url(#velvet)"/><g transform="translate(32 32) scale(1) translate(-32 -32)"><g clip-path="url(#inside)"><rect x="-12" y="8" width="35" height="48" rx="4" fill="#fffaf0"/><use href="#heart" transform="translate(15 32) scale(4.2)" fill="#a01d2d"/><rect x="26" y="8" width="35" height="48" rx="4" fill="#fffaf0"/><use href="#spade" transform="translate(43.5 31) scale(4.4)" fill="#1a1a1a"/></g></g></svg>

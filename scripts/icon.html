@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Off by One icon</title>
+<!-- The app icons, rendered by render-icons.sh: two neighbouring cards in a row, a heart and a spade, at the cards' own
+     proportions, caught mid-slide in the velvet tile, whose padding crops them square at either side (more on the left,
+     for the slide). Layouts, as #kind-size:
+     #any-N         rounded, on transparency (favicon, PWA "any")
+     #apple-180     full bleed, for iOS to round
+     #maskable-N    full bleed, the cards inside the 80% safe zone (a circle: their crop's corners must fall in it)
+     #svg           the SVG favicon's source, written into the page for render-icons.sh to save -->
+<style>
+	body {
+		margin: 0;
+		background: none;
+	}
+
+	svg {
+		display: block;
+	}
+</style>
+</head>
+<body>
+<script>
+	const [kind, n] = location.hash.slice(1).split('-');
+	const size = +n || 512;
+
+	// how big the cropped cards are in the tile: the maskable's must fit a circle of 40% radius, crop corners and all
+	const SCALE = { any: 1, svg: 1, apple: 1.08, maskable: 0.72 }[kind] ?? 1;
+	const rounded = kind === 'any' || kind === 'svg';
+
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="${size}" height="${size}">`
+		+ '<defs>'
+		+ '<radialGradient id="velvet" cx="30%" cy="0%" r="110%"><stop offset="0" stop-color="#5a1626"/><stop offset="0.6" stop-color="#2b0b13"/><stop offset="1" stop-color="#17050a"/></radialGradient>'
+		// the tile's padding: the cards show only within it, cut square (a rounded cut read as a card's own corner)
+		+ '<clipPath id="inside"><rect x="7" y="7" width="50" height="50"/></clipPath>'
+		+ '<path id="heart" d="M0-1c-.48-.76-1.68-.48-1.56.43.1.76 1.56 1.76 1.56 1.76s1.46-1 1.56-1.76c.12-.91-1.08-1.19-1.56-.43z"/>'
+		+ '<path id="spade" d="M0-1.6s-1.6 1.18-1.6 2.08c0 .52.48.85.9.85.24 0 .44-.09.55-.24-.04.41-.24.7-.5.94h1.3c-.26-.24-.46-.53-.5-.94.11.15.31.24.55.24.42 0 .9-.33.9-.85 0-.9-1.6-2.08-1.6-2.08z"/>'
+		+ '</defs>'
+		+ `<rect width="64" height="64" rx="${rounded ? 12 : 0}" fill="url(#velvet)"/>`
+		+ `<g transform="translate(32 32) scale(${SCALE}) translate(-32 -32)"><g clip-path="url(#inside)">`
+		+ '<rect x="-12" y="8" width="35" height="48" rx="4" fill="#fffaf0"/>'
+		+ '<use href="#heart" transform="translate(15 32) scale(4.2)" fill="#a01d2d"/>'
+		+ '<rect x="26" y="8" width="35" height="48" rx="4" fill="#fffaf0"/>'
+		+ '<use href="#spade" transform="translate(43.5 31) scale(4.4)" fill="#1a1a1a"/>'
+		+ '</g></g></svg>';
+
+	if (kind === 'svg') {
+		const pre = document.createElement('pre');
+		pre.id = 'source';
+		pre.textContent = svg;
+		document.body.appendChild(pre);
+	} else {
+		document.body.innerHTML = svg;
+	}
+</script>
+</body>
+</html>

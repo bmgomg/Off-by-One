@@ -1,0 +1,17 @@
+{
+	"name": "Off by One",
+	"short_name": "Off by One",
+	"description": "A card puzzle in one shift: slide the row or column that slipped back into place.",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#17050a",
+	"theme_color": "#17050a",
+	"icons": [
+		{ "src": "icons/icon-192.png?v=1", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+		{ "src": "icons/icon-512.png?v=1", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+		{ "src": "icons/maskable-192.png?v=1", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+		{ "src": "icons/maskable-512.png?v=1", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+	]
+}

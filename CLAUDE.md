@@ -89,6 +89,23 @@ in `src/const.js`. In the app's theme a level is an "act", a puzzle a "trick", t
 Practice has no timer and a board-size choice, and lets you mark clashes. A wrong shift shows the same single Reset;
 there's no Reveal in Practice any more.
 
+## Icon and offline play
+
+The icons come from one source, `scripts/icon.html`, rendered by `sh scripts/render-icons.sh` (as in Dark Matter): two
+neighbouring cards in a row, a heart and a spade, at the cards' own proportions, caught mid-slide in the velvet tile,
+whose padding crops them square at either side (more on the left). No gold border (the designer's call). It writes
+`static/favicon.svg` and `favicon.png` (32 px), and `static/icons/`: 192 and 512 rounded on transparency, a full-bleed
+180 for iOS, and maskable 192 and 512 with the cards shrunk into the safe circle. Bump the `?v=` on their links in
+`src/app.html` and `static/manifest.json` after a change, past browser caches. Dropped tries: a dashed home frame between
+two cards (a row never has a gap between its cards), squat cards inside a gold frame, and a rounded crop (it read as the
+cards' own corners, so the cards looked whole).
+
+A PWA that plays offline: `static/manifest.json` (installable, standalone, portrait) and `src/service-worker.js`, Dark
+Matter's, which SvelteKit registers. On install it caches every built file and static file but the music and the
+install icons; the music is cached the first time it's fetched, in a cache of its own; the page comes from the network
+when it answers within 3 s, else the cache. Tested on a production build with its server stopped: Home, a saved puzzle
+resumed, and the cards all came from the cache.
+
 ## Toolbar
 
 Back, New Deal (Practice), SFX On/Off, Music On/Off, then Stats in Challenge or Reset Stats in Practice. At 16 px,
@@ -146,5 +163,4 @@ Simulated rule sets, from choosing the rule (one random shift applied to a valid
 ## Open questions
 
 - Lowest playable time limit, and whether to drop 3 or 5 seconds per level, or a percentage.
-- Not yet in the app: offline play (PWA: Dark Matter's service worker and manifest need app icons first), the
-  itch.io build, a playtest level jump.
+- Not yet in the app: the itch.io build, a playtest level jump.
