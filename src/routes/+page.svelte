@@ -10,7 +10,7 @@
 	// the page is designed at DX × DY and scales to fit the window
 	let ww = $state(DX);
 	let wh = $state(DY);
-	const scale = $derived(Math.min(ww / DX, wh / DY));
+	const scale = $derived(Math.min(1, ww / DX, wh / DY));
 
 	let splash = $state(true);
 	post(() => (splash = false), 2000);
