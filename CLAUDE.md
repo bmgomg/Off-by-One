@@ -1,6 +1,6 @@
 # Off by One
 
-*Slide of hand.*
+*Just a slide of hand.*
 
 A card puzzle for the SHIFT jam: one row or column has slipped out of place. Slide it back.
 The lane wraps around, and you get one shift per puzzle.
@@ -36,7 +36,9 @@ playtest extras ("Start at level", rule and size switches in one place).
 The template's BMG splash, as in Dark Matter: a tap on it wipes this game's saves. It goes by a push, not a fade: it slides
 off to the left as the page slides in from the right (`SPLASH_SLIDE_MS`, 0.7 s, ease-in-out). Home and the game stand in a
 row, so Play pushes Home off to the left and Back brings it back from there (`PAGE_SLIDE_MS`, 0.5 s); the gold frame holds
-still. The act and final-curtain panels slide in from the right and out to the left, and so does the message under the
+still. A new puzzle (New Deal, Next trick, a board size, Encore) pushes the old one's cards off the felt to the left (the
+felt stays, easing to a new board size meanwhile); the old cards, on their way out, keep their own faces, since Svelte stops updating an outgoing block (`game.deal` keys it). The act and
+final-curtain panels slide in from the right and out to the left, and so does the message under the
 board with its buttons, a new one pushing the old out (`STRIP_SLIDE_MS`, 0.4 s). With reduced motion they're instant.
 
 ## Rules

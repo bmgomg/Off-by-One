@@ -26,7 +26,7 @@
 		<li>One row or column has slipped out of place.</li>
 		<li>Slide it back. Cards that leave one end come round at the other.</li>
 		<li>{RULES[app.rule].text}</li>
-		<li>One shift per puzzle. Beat the clock.</li>
+		<li>Fix it in one shift. Beat the clock.</li>
 	</ul>
 
 	<div class="variant" role="group" aria-label="Rules">

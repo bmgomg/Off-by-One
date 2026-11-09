@@ -5,15 +5,15 @@ export const DX = 450;
 export const DY = 800;
 
 export const TITLE = 'Off by One';
-export const TAGLINE = 'Slide of hand.';
+export const TAGLINE = 'Just a slide of hand.';
 
 // the splash slides off to the left as the page slides in from the right, pushing it, in this long
 export const SPLASH_SLIDE_MS = 700;
 // One page pushes another the same way, in this long. They stand in a row, Home then a game, so going on pushes to the
 // left and Back to the right.
 export const PAGE_SLIDE_MS = 500;
-// The act and final-curtain panels, and the message and buttons under the board, change by a push too, in this long:
-// the page stays, so it's quicker.
+// A new puzzle pushes the old off the table, and the act and final-curtain panels and the message and buttons under the
+// board change by a push too, all in this long: the page stays, so it's quicker.
 export const STRIP_SLIDE_MS = 400;
 // Reset slides the wrongly shifted lane back where it was dealt, in this long
 export const RESET_SLIDE_MS = 400;

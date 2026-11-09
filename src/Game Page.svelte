@@ -5,6 +5,7 @@
 	import {
 		app,
 		game,
+		geo,
 		goHome,
 		levelSecs,
 		newDeal,
@@ -20,6 +21,7 @@
 	import { pushIn, pushOut, slideX } from './utils';
 
 	const challenge = $derived(app.mode === 'challenge');
+	const g = $derived(geo());
 	const run = $derived(game.run);
 	const inLevel = $derived(
 		['ready', 'play', 'wrong'].includes(game.phase) ? (run.tasks % TASKS_PER_LEVEL) + 1 : ((run.tasks - 1) % TASKS_PER_LEVEL) + 1
@@ -82,8 +84,20 @@
 	{/if}
 
 	<div class="table">
-		<div class="felt" class:won={game.flash === 'won'} class:lost={game.flash === 'lost'}>
-			<Board />
+		<!-- The felt stays, sized to the puzzle on it (easing to a new board size as the cards slide); a new puzzle's
+		     cards push the old ones off it to the left, as the message under it is pushed. The old ones, on their way
+		     out, no longer update, so they show their own cards to the end. -->
+		<div
+			class="felt"
+			class:won={game.flash === 'won'}
+			class:lost={game.flash === 'lost'}
+			style="width: {g.W}px; height: {g.H}px; --slide: {STRIP_SLIDE_MS}ms"
+		>
+			{#key game.deal}
+				<div class="deal" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
+					<Board />
+				</div>
+			{/key}
 		</div>
 
 		{#if challenge && game.phase === 'ready'}
@@ -337,13 +351,24 @@
 		place-items: center;
 	}
 
+	.deal {
+		grid-area: 1/1;
+	}
+
 	/* one gold line, and little padding: the page's double frame is just outside it */
 	.felt {
+		display: grid;
+		place-items: center;
+		/* the cards sliding on or off show only within it */
+		overflow: hidden;
 		padding: 5px;
 		background: #120609;
 		border: 1px solid var(--gold);
 		box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6);
+		/* the size as slideX moves: cubicInOut */
 		transition:
+			width var(--slide) cubic-bezier(0.65, 0, 0.35, 1),
+			height var(--slide) cubic-bezier(0.65, 0, 0.35, 1),
 			border-color 0.3s,
 			box-shadow 0.3s;
 	}

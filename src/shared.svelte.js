@@ -47,6 +47,8 @@ export function save() {
  * wrong: a shift that left clashes, awaiting Reset; failed: a challenge trick lost to the clock.
  */
 export const game = $state({
+	// counts the puzzles dealt: a new one pushes the old off the table
+	deal: 0,
 	R: 4,
 	C: 5,
 	grid: [],
@@ -136,6 +138,7 @@ function deal() {
 	game.grid = puzzle.slice();
 	game.solutions = solutions;
 	game.reviewing = false;
+	game.deal++;
 	clearLane();
 }
 
