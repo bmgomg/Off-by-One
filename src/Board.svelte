@@ -105,6 +105,9 @@
 		return { i: r * game.C + c, x, y, home: Math.min(off, laneLen(lane.axis) * P - off) < P * 0.15 };
 	});
 
+	// the card the lane was taken by is lifted, grown a little about its middle (after its place in the transform)
+	const LIFT = ' scale(1.04)';
+
 	const band = $derived(
 		lane.axis === 'row'
 			? { x: 0, y: lane.idx * g.pY, w: g.W, h: g.pY }
@@ -210,7 +213,7 @@
 				src={cardImage(t.code)}
 				alt={cardName(t.code)}
 				draggable="false"
-				style="transform: translate({t.x}px, {t.y}px)"
+				style="transform: translate({t.x}px, {t.y}px){anchor?.i === t.i ? LIFT : ''}"
 			/>
 		{/if}
 	{/each}
@@ -223,7 +226,7 @@
 			alt=""
 			aria-hidden="true"
 			draggable="false"
-			style="transform: translate({t.ghost[0]}px, {t.ghost[1]}px)"
+			style="transform: translate({t.ghost[0]}px, {t.ghost[1]}px){anchor?.i === t.i ? LIFT : ''}"
 		/>
 	{/each}
 
@@ -287,12 +290,15 @@
 			0 3px 6px rgba(0, 0, 0, 0.55);
 	}
 
-	/* the card the lane was taken by, as it travels */
+	/* the card the lane was taken by, as it travels: lifted a little (LIFT), with a gold ring, a glow and a deeper shadow;
+	   above its neighbours, which it overlaps. (Between a faint pale rim, lost against the ivory cards, and a lift of 8%
+	   with a dark gap inside a thick ring, which was too much.) */
 	.card.moving.anchor {
+		z-index: 1;
 		box-shadow:
-			0 0 0 2px var(--gold-hi),
-			0 0 16px rgba(216, 180, 100, 0.55),
-			0 10px 18px rgba(0, 0, 0, 0.7);
+			0 0 0 3px var(--gold),
+			0 0 16px 3px rgba(216, 180, 100, 0.5),
+			0 12px 22px rgba(0, 0, 0, 0.75);
 	}
 
 	/* its first place, over whatever card passes through it; solid and glowing once it's back */

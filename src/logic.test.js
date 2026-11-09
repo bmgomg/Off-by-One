@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	ALL,
-	RULES,
+	ok,
 	allMoves,
 	applyMove,
 	badPairs,
@@ -43,21 +43,18 @@ describe('moves', () => {
 });
 
 describe('puzzles', () => {
-	for (const ruleId of Object.keys(RULES)) {
-		for (const size of Object.keys(SIZES)) {
-			it(`${ruleId} ${size}: scrambled, with every listed shift solving it`, () => {
-				const [R, C] = SIZES[size];
-				const ok = RULES[ruleId].ok;
-				const rand = seeded(7);
-				for (let n = 0; n < 5; n++) {
-					const { puzzle, solutions } = makePuzzle(R, C, ruleId, rand);
-					expect(new Set(puzzle).size).toBe(R * C);
-					expect(badPairs(puzzle, R, C, ok).length).toBeGreaterThan(0);
-					expect(solutions.length).toBeGreaterThan(0);
-					for (const m of solutions) expect(badPairs(applyMove(puzzle, R, C, m), R, C, ok)).toEqual([]);
-				}
-			});
-		}
+	for (const size of Object.keys(SIZES)) {
+		it(`${size}: scrambled, with every listed shift solving it`, () => {
+			const [R, C] = SIZES[size];
+			const rand = seeded(7);
+			for (let n = 0; n < 5; n++) {
+				const { puzzle, solutions } = makePuzzle(R, C, rand);
+				expect(new Set(puzzle).size).toBe(R * C);
+				expect(badPairs(puzzle, R, C, ok).length).toBeGreaterThan(0);
+				expect(solutions.length).toBeGreaterThan(0);
+				for (const m of solutions) expect(badPairs(applyMove(puzzle, R, C, m), R, C, ok)).toEqual([]);
+			}
+		});
 	}
 });
 

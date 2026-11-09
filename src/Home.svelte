@@ -2,8 +2,9 @@
 	import { onMount } from 'svelte';
 	import { cardImage } from './cards';
 	import { TAGLINE } from './const';
-	import { RULES } from './logic';
-	import { app, loadSettings, setRule, startChallenge, startPractice } from './shared.svelte';
+	import { RULE_TEXT } from './logic';
+	import { loadSettings, startChallenge, startPractice } from './shared.svelte';
+	import { sfx } from './sound';
 
 	onMount(loadSettings);
 </script>
@@ -25,31 +26,28 @@
 	<ul class="rules">
 		<li>One row or column has slipped out of place.</li>
 		<li>Slide it back. Cards that leave one end come round at the other.</li>
-		<li>{RULES[app.rule].text}</li>
+		<li>{RULE_TEXT}</li>
 		<li>Fix it in one shift. Beat the clock.</li>
 	</ul>
 
-	<div class="variant" role="group" aria-label="Rules">
-		{#each Object.entries(RULES) as [id, r] (id)}
-			<button type="button" aria-pressed={app.rule === id} onclick={() => setRule(id)}>{r.name}</button>
-		{/each}
-	</div>
-
 	<div class="actions">
 		<button type="button" class="btn" onclick={() => startPractice()}>Practice</button>
-		<button type="button" class="btn primary" onclick={() => startChallenge()}>Challenge</button>
+		<button type="button" class="btn primary" onclick={() => (sfx.tap(), startChallenge())}>Challenge</button>
 	</div>
 </div>
 
 <style>
+	/* all of it together, centred on the page, as Dark Matter's Home (with the rule pills gone, the buttons held to the
+	   foot left a gap above them) */
 	.home {
 		height: 100%;
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 56px 40px 44px;
-		gap: 20px;
+		justify-content: center;
+		padding: 40px 40px;
+		gap: 24px;
 	}
 
 	.fan {
@@ -180,35 +178,10 @@
 		font-size: 14px;
 	}
 
-	.variant {
-		display: flex;
-		gap: 6px;
-		font-family: var(--caps);
-		font-weight: 600;
-		font-size: 15px;
-		letter-spacing: 1px;
-	}
-
-	.variant button {
-		min-height: 36px;
-		padding: 0 14px;
-		border: 1px solid var(--gold-faint);
-		border-radius: 18px;
-		background: none;
-		color: var(--label);
-		cursor: pointer;
-	}
-
-	.variant button[aria-pressed='true'] {
-		border-color: var(--gold);
-		color: var(--gold-pale);
-		background: rgba(216, 180, 100, 0.12);
-	}
-
 	.actions {
 		display: flex;
 		gap: 18px;
-		margin-top: auto;
+		margin-top: 16px;
 	}
 
 	.btn {
@@ -224,7 +197,14 @@
 		font-size: 19px;
 		letter-spacing: 1px;
 		cursor: pointer;
-		transition: transform 0.12s;
+		transition:
+			transform 0.12s,
+			background-color 0.2s,
+			border-color 0.2s,
+			outline-color 0.2s,
+			color 0.2s,
+			box-shadow 0.2s,
+			filter 0.2s;
 	}
 
 	.btn:active {
@@ -235,5 +215,21 @@
 		border-color: var(--gold-pale);
 		background: linear-gradient(180deg, #e8c97c, #b68c3c);
 		color: var(--velvet);
+	}
+
+	/* the outlined one takes a gold tint and its lines brighten; the gold one brightens; both glow */
+	@media (hover: hover) {
+		.btn:hover {
+			border-color: var(--gold-pale);
+			outline-color: rgba(243, 220, 156, 0.7);
+			color: var(--gold-pale);
+			background-color: rgba(216, 180, 100, 0.12);
+			box-shadow: 0 0 18px rgba(216, 180, 100, 0.35);
+		}
+
+		.btn.primary:hover {
+			color: var(--velvet);
+			filter: brightness(1.1);
+		}
 	}
 </style>

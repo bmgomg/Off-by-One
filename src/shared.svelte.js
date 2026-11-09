@@ -1,5 +1,5 @@
 import { APP_STATE, MAX_STRIKES, RESET_SLIDE_MS, SIZES, TASKS_PER_LEVEL } from './const';
-import { RULES, applyMove, badPairs, geometry, levelInfo, makePuzzle, mod, moveText, points } from './logic';
+import { applyMove, badPairs, geometry, levelInfo, makePuzzle, mod, moveText, ok, points } from './logic';
 import { setMusic, setSound, sfx, startMusic } from './sound';
 import { reducedMotion, tween } from './utils';
 
@@ -9,11 +9,11 @@ const KEY = APP_STATE;
 export const app = $state({
 	page: 'home',
 	mode: 'practice',
-	rule: 'gap',
 	size: '4x5',
 	sound: true,
 	music: true,
-	best: {}
+	// the best Challenge score
+	best: 0
 });
 
 // Called once Home is up, after the splash, so a tap on the splash (which wipes the save) comes first.
@@ -28,18 +28,18 @@ export function loadSettings() {
 	} catch {
 		// nothing saved, or storage unavailable
 	}
-	app.rule = RULES[saved.rule] ? saved.rule : 'gap';
 	app.size = SIZES[saved.size] ? saved.size : '4x5';
 	app.sound = saved.sound !== false;
 	app.music = saved.music !== false;
-	app.best = saved.best || {};
+	// saved per rule while there were two: the rank gap's carries over
+	app.best = typeof saved.best === 'number' ? saved.best : saved.best?.gap || 0;
 	setSound(app.sound);
 	setMusic(app.music, false);
 }
 
 export function save() {
 	try {
-		localStorage.setItem(KEY, JSON.stringify({ rule: app.rule, size: app.size, sound: app.sound, music: app.music, best: app.best }));
+		localStorage.setItem(KEY, JSON.stringify({ size: app.size, sound: app.sound, music: app.music, best: app.best }));
 	} catch {
 		// storage can be unavailable (private mode); settings then last for the session
 	}
@@ -76,7 +76,6 @@ export const game = $state({
  *  or the keys), not by Reset or Reveal, so the board shows where it started. */
 export const lane = $state({ axis: null, idx: 0, d: 0, steps: 0, answer: false, user: false });
 
-export const ok = (a, b) => RULES[app.rule].ok(a, b);
 export const geo = () => geometry(game.R, game.C);
 export const pitch = (axis) => (axis === 'row' ? geo().p : geo().pY);
 export const laneLen = (axis) => (axis === 'row' ? game.C : game.R);
@@ -140,7 +139,7 @@ function frame() {
 function deal() {
 	const size = app.mode === 'challenge' ? levelInfo(game.run.level).size : app.size;
 	[game.R, game.C] = SIZES[size];
-	const { puzzle, solutions } = makePuzzle(game.R, game.C, app.rule);
+	const { puzzle, solutions } = makePuzzle(game.R, game.C);
 	game.puzzle = puzzle;
 	game.grid = puzzle.slice();
 	game.solutions = solutions;
@@ -158,7 +157,8 @@ export function startPractice() {
 	app.page = 'game';
 	const saved = loadGame();
 	if (saved?.tally) game.practice = saved.tally;
-	if (!restore(saved)) newDeal();
+	if (restore(saved)) sfx.tap();
+	else newDeal();
 }
 
 export function newDeal() {
@@ -217,7 +217,7 @@ export function next() {
 
 // Each mode's game is saved under a key of its own as it goes (see the Game Page), on Back, and when the app is hidden,
 // so it can be come back to, after a restart too: the puzzle and where it stands, the clock's time used and whether it
-// was running, the rules it was dealt under, the shift Reset would undo, and the mode's tally (Practice) or run
+// was running, the shift Reset would undo, and the mode's tally (Practice) or run
 // (Challenge).
 const gameKey = () => `${APP_STATE} • ${app.mode}`;
 const TABLE = ['R', 'C', 'grid', 'puzzle', 'solutions', 'phase', 'msg', 'left', 'showClashes', 'reviewing'];
@@ -229,7 +229,7 @@ export function saveGame(clock = running || !!game.paused?.clock) {
 	for (const k of TABLE) table[k] = $state.snapshot(game[k]);
 	const tally = $state.snapshot(app.mode === 'practice' ? game.practice : game.run);
 	try {
-		localStorage.setItem(gameKey(), JSON.stringify({ rule: app.rule, table, tally, elapsed: elapsedMs(), clock, wrongMove }));
+		localStorage.setItem(gameKey(), JSON.stringify({ table, tally, elapsed: elapsedMs(), clock, wrongMove }));
 	} catch {
 		// storage unavailable: the game lasts as long as the page
 	}
@@ -244,11 +244,12 @@ function loadGame() {
 }
 
 /** Puts a saved game back, if there's one to go back to: a puzzle under way in Practice (not solved or revealed), a run
- *  not over in Challenge, either dealt under the rules now picked. It waits for Resume, its board face down and its
+ *  not over in Challenge. It waits for Resume, its board face down and its
  *  clock stopped, unless it's at an act's panel, which is a prompt of its own. Whether it did. */
 function restore(saved) {
 	const live = app.mode === 'practice' ? ['play', 'wrong'] : ['ready', 'play', 'wrong', 'solved', 'failed', 'revealed'];
-	if (!saved?.table || saved.rule !== app.rule || !live.includes(saved.table.phase)) return false;
+	// (a game saved under the dropped suit-or-rank rule isn't brought back)
+	if (!saved?.table || (saved.rule && saved.rule !== 'gap') || !live.includes(saved.table.phase)) return false;
 	clearLane();
 	Object.assign(game, saved.table, { busy: false, flash: '' });
 	if (app.mode === 'challenge') game.run = saved.tally;
@@ -285,8 +286,8 @@ function taskDone() {
 	r.tasks++;
 	if (r.strikes >= MAX_STRIKES) {
 		game.phase = 'over';
-		if (r.score > (app.best[app.rule] || 0)) {
-			app.best[app.rule] = r.score;
+		if (r.score > app.best) {
+			app.best = r.score;
 			r.newBest = true;
 			save();
 		}
@@ -478,21 +479,17 @@ export function cancelLane() {
 	});
 }
 
+/** Turning the effects on clicks, as they come back; turning them off is silent. */
 export function toggleSound() {
 	app.sound = !app.sound;
 	setSound(app.sound);
 	save();
-	if (app.sound) sfx.tick();
+	if (app.sound) sfx.tap();
 }
 
 export function toggleMusic() {
 	app.music = !app.music;
 	setMusic(app.music);
-	save();
-}
-
-export function setRule(rule) {
-	app.rule = rule;
 	save();
 }
 

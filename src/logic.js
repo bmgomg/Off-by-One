@@ -9,18 +9,9 @@ export const suit = (c) => Math.floor(c / 100);
 export const rank = (c) => c % 100;
 export const mod = (a, n) => ((a % n) + n) % n;
 
-export const RULES = {
-	gap: {
-		name: 'Rank gap',
-		ok: (a, b) => Math.abs(rank(a) - rank(b)) >= 2,
-		text: 'Touching cards must differ in rank by at least two.'
-	},
-	match: {
-		name: 'Suit or rank',
-		ok: (a, b) => suit(a) === suit(b) || rank(a) === rank(b),
-		text: 'Touching cards must share a suit or a rank.'
-	}
-};
+// The rule, as in Race the Ace: touching cards differ in rank by at least two. (A second rule, suit or rank, was dropped.)
+export const ok = (a, b) => Math.abs(rank(a) - rank(b)) >= 2;
+export const RULE_TEXT = 'Touching cards must differ in rank by at least two.';
 
 export const levelInfo = (L) => {
 	if (L <= LEVELS.length) return LEVELS[L - 1];
@@ -91,31 +82,12 @@ export function applyMove(g, R, C, m) {
 	return out;
 }
 
-// Under suit-or-rank, grids where every pair one way matches the same way read as plain stripes.
-export function striped(g, R, C) {
-	let hS = true, hR = true, vS = true, vR = true;
-	for (let i = 0; i < R * C; i++) {
-		const r = Math.floor(i / C), c = i % C;
-		if (c < C - 1) {
-			if (suit(g[i]) !== suit(g[i + 1])) hS = false;
-			if (rank(g[i]) !== rank(g[i + 1])) hR = false;
-		}
-		if (r < R - 1) {
-			if (suit(g[i]) !== suit(g[i + C])) vS = false;
-			if (rank(g[i]) !== rank(g[i + C])) vR = false;
-		}
-	}
-	return hS || hR || vS || vR;
-}
-
 /** A scrambled grid one shift away from valid, with every shift that solves it (any of them wins). */
-export function makePuzzle(R, C, ruleId, rand = Math.random) {
-	const ok = RULES[ruleId].ok;
+export function makePuzzle(R, C, rand = Math.random) {
 	const ms = allMoves(R, C);
 	for (let t = 0; t < 300; t++) {
 		const sol = genGrid(R, C, ok, rand);
 		if (!sol) continue;
-		if (ruleId === 'match' && striped(sol, R, C)) continue;
 		const p = applyMove(sol, R, C, ms[Math.floor(rand() * ms.length)]);
 		if (badPairs(p, R, C, ok).length === 0) continue;
 		const solutions = ms.filter((m) => badPairs(applyMove(p, R, C, m), R, C, ok).length === 0);

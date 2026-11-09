@@ -22,7 +22,7 @@ playtest extras ("Start at level", rule and size switches in one place).
 ## Files
 
 - `src/const.js`: title, slide timings, board sizes, the challenge's levels and limits, the board's area.
-- `src/logic.js`: cards, the two rule sets, puzzle generation, levels, scoring, board geometry (tested in `logic.test.js`).
+- `src/logic.js`: cards, the rule, puzzle generation, levels, scoring, board geometry (tested in `logic.test.js`).
 - `src/shared.svelte.js`: settings (saved under `APP_STATE`, loaded once Home is up), the puzzle and the run, the timer, and moving a lane.
 - `src/utils.js`: `tween`, and `slideX` / `pushIn` / `pushOut`, the slide transitions.
 - `src/Splash.svelte`, `src/Home.svelte`, `src/Game Page.svelte`, `src/Board.svelte` (the cards, dragging with the wrap copy, keyboard, clash marks).
@@ -55,10 +55,11 @@ hold them to the text's height, so the padding overflows and the board's room (`
 
 - One row or column has been shifted out of place. Drag it back: rows sideways, columns up or down.
 - Any shift that leaves the whole board valid wins, as in Race the Ace.
-- **Rank gap** (default): touching cards must differ in rank by at least 2. J = 11, Q = 12, K = 13, A = 14.
-- **Suit or rank** (variant): every card must share a suit or a rank with each card it touches.
+- Touching cards must differ in rank by at least 2 (Race the Ace's rule). J = 11, Q = 12, K = 13, A = 14. A second
+  rule, suit or rank, was offered on Home and dropped (the designer's call); the best score kept is the rank gap's.
 - Keyboard: arrows pick a card, Shift+arrows slide its lane, Enter commits, Esc cancels.
-- While a lane moves, the card it was taken by (under the finger, or the keyboard's cursor) has a gold rim, and a
+- While a lane moves, the card it was taken by (under the finger, or the keyboard's cursor) is lifted (4% larger, above its neighbours)
+  with a gold ring, and a
   dashed frame marks where it started; the frame turns solid and glows when the card is back in it, i.e. the lane is
   back as it was (letting go there shifts nothing). Passing back through home plays a soft two-note click (`sfx.home`)
   in place of a step's tick.
@@ -119,7 +120,7 @@ Why shifting differs from swapping: a 4×5 board has 31 possible shifts against 
 shift keeps every pair inside the row except one, where the ends wrap, and replaces all of the
 row's up/down neighbors. Clashes pile up along the shifted lane, so finding it is a deduction.
 
-Simulated rule sets (one random shift applied to a valid grid, 200–300 puzzles each):
+Simulated rule sets, from choosing the rule (one random shift applied to a valid grid, 200–300 puzzles each):
 
 | Rules | Board | Puzzles with one solving shift | Clashing pairs shown |
 |---|---|---|---|

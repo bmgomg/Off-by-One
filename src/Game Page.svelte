@@ -3,7 +3,7 @@
 	import { untrack } from 'svelte';
 	import Board from './Board.svelte';
 	import { MAX_STRIKES, SIZES, STRIP_SLIDE_MS, TASKS_PER_LEVEL } from './const';
-	import { RULES, levelInfo } from './logic';
+	import { RULE_TEXT, levelInfo } from './logic';
 	import {
 		app,
 		game,
@@ -23,6 +23,7 @@
 		resume,
 		saveGame
 	} from './shared.svelte';
+	import { sfx } from './sound';
 	import { pushIn, pushOut, slideX } from './utils';
 
 	const challenge = $derived(app.mode === 'challenge');
@@ -34,7 +35,7 @@
 	const total = $derived(levelSecs() * 1000);
 	const leftFrac = $derived(Math.max(0, Math.min(1, game.left / total)));
 	const leftSecs = $derived(Math.ceil(game.left / 1000));
-	const best = $derived(app.best[app.rule] || 0);
+	const best = $derived(app.best);
 	// the message and buttons under the board change as one, by a push; a paused game's wait under its panel
 	const strip = $derived(`${game.phase} ${game.reviewing} ${game.msg.text} ${!!game.paused}`);
 
@@ -45,6 +46,13 @@
 		void leftSecs;
 		untrack(() => saveGame());
 	});
+
+	// A press of a button whose action makes no sound of its own clicks; those that deal, flip or fanfare don't, so as
+	// not to clash.
+	const tapThen = (action) => () => {
+		sfx.tap();
+		action();
+	};
 
 	// What the level prompt says changed.
 	const prompt = $derived.by(() => {
@@ -91,7 +99,7 @@
 					<button type="button" aria-pressed={app.size === s} onclick={() => setSize(s)}>{s.replace('x', '×')}</button>
 				{/each}
 			</div>
-			<label class="clashes"><input type="checkbox" bind:checked={game.showClashes} /> Clashes</label>
+			<label class="clashes"><input type="checkbox" bind:checked={game.showClashes} onchange={(e) => sfx.toggle(e.currentTarget.checked)} /> Clashes</label>
 		</div>
 	{/if}
 
@@ -99,7 +107,7 @@
 	<div class="table" class:practice={!challenge}>
 		<div class="above">
 			{#if !challenge}
-				<div class="rule">{RULES[app.rule].text}</div>
+				<div class="rule">{RULE_TEXT}</div>
 			{/if}
 		</div>
 
@@ -145,8 +153,8 @@
 					<div class="big">{run.score}</div>
 					<p>{run.solved} of {run.tasks} tricks solved, reached act {run.level}. {run.newBest ? 'A new best!' : `Best: ${best}.`}</p>
 					<div class="row">
-						<button type="button" class="btn primary" onclick={newRun}>Encore</button>
-						<button type="button" class="btn" onclick={review}>See the board</button>
+						<button type="button" class="btn primary" onclick={tapThen(newRun)}>Encore</button>
+						<button type="button" class="btn" onclick={tapThen(review)}>See the board</button>
 					</div>
 				</div>
 			</div>
@@ -163,15 +171,15 @@
 					{#if game.paused}
 						<!-- nothing till Resume -->
 					{:else if game.phase === 'wrong'}
-						<button type="button" class="btn small primary" onclick={reset}>Reset</button>
+						<button type="button" class="btn small primary" onclick={tapThen(reset)}>Reset</button>
 					{:else if game.phase === 'failed'}
 						<button type="button" class="btn small primary" onclick={next}>Next trick</button>
-						<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
+						<button type="button" class="btn small" onclick={tapThen(showAnswer)}>Reveal</button>
 					{:else if game.phase === 'solved' || game.phase === 'revealed'}
 						<button type="button" class="btn small primary" onclick={next}>Next trick</button>
 					{:else if game.phase === 'over' && game.reviewing}
-						<button type="button" class="btn small primary" onclick={newRun}>Encore</button>
-						<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
+						<button type="button" class="btn small primary" onclick={tapThen(newRun)}>Encore</button>
+						<button type="button" class="btn small" onclick={tapThen(showAnswer)}>Reveal</button>
 					{/if}
 				</div>
 			</div>
@@ -180,15 +188,15 @@
 
 	<!-- every label on one line, and the toggles as wide either way, so nothing moves when one changes -->
 	<nav class="toolbar">
-		<button type="button" onclick={goHome}>Back</button>
+		<button type="button" onclick={tapThen(goHome)}>Back</button>
 		{#if !challenge}
 			<button type="button" onclick={newDeal}>New Deal</button>
 		{/if}
 		<button type="button" onclick={toggleSound}>SFX {@render state(app.sound)}</button>
-		<button type="button" onclick={toggleMusic}>Music {@render state(app.music)}</button>
+		<button type="button" onclick={tapThen(toggleMusic)}>Music {@render state(app.music)}</button>
 		{#if challenge}
 			<!-- for the stats card, still to come -->
-			<button type="button">Stats</button>
+			<button type="button" onclick={sfx.tap}>Stats</button>
 		{/if}
 	</nav>
 </div>
