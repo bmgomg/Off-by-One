@@ -58,6 +58,10 @@ hold them to the text's height, so the padding overflows and the board's room (`
 - **Rank gap** (default): touching cards must differ in rank by at least 2. J = 11, Q = 12, K = 13, A = 14.
 - **Suit or rank** (variant): every card must share a suit or a rank with each card it touches.
 - Keyboard: arrows pick a card, Shift+arrows slide its lane, Enter commits, Esc cancels.
+- While a lane moves, the card it was taken by (under the finger, or the keyboard's cursor) has a gold rim, and a
+  dashed frame marks where it started; the frame turns solid and glows when the card is back in it, i.e. the lane is
+  back as it was (letting go there shifts nothing). Passing back through home plays a soft two-note click (`sfx.home`)
+  in place of a step's tick.
 
 ## Challenge
 

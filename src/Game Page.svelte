@@ -403,7 +403,7 @@
 	.rule {
 		min-height: 22px;
 		font-style: italic;
-		font-size: 17px;
+		font-size: 18px;
 		color: var(--label);
 	}
 
@@ -603,7 +603,7 @@
 		margin: 0;
 		max-width: 400px;
 		font-style: italic;
-		font-size: 18px;
+		font-size: 20px;
 		line-height: 1.2;
 		color: var(--cream);
 		text-align: center;

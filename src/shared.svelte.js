@@ -69,8 +69,9 @@ export const game = $state({
 	run: { level: 1, tasks: 0, strikes: 0, score: 0, solved: 0, pendingLevel: false, newBest: false }
 });
 
-/** The lane being moved: axis row | col | null, its index, its offset in board px. */
-export const lane = $state({ axis: null, idx: 0, d: 0, steps: 0, answer: false });
+/** The lane being moved: axis row | col | null, its index, its offset in board px; user: moved by the player (a drag
+ *  or the keys), not by Reset or Reveal, so the board shows where it started. */
+export const lane = $state({ axis: null, idx: 0, d: 0, steps: 0, answer: false, user: false });
 
 export const ok = (a, b) => RULES[app.rule].ok(a, b);
 export const geo = () => geometry(game.R, game.C);
@@ -424,12 +425,12 @@ export function showAnswer() {
 // ---------- moving a lane ----------
 
 export function clearLane() {
-	Object.assign(lane, { axis: null, idx: 0, d: 0, steps: 0, answer: false });
+	Object.assign(lane, { axis: null, idx: 0, d: 0, steps: 0, answer: false, user: false });
 }
 
 /** Begins dragging a lane. */
 export function grab(axis, idx) {
-	Object.assign(lane, { axis, idx, d: 0, steps: 0, answer: false });
+	Object.assign(lane, { axis, idx, d: 0, steps: 0, answer: false, user: true });
 }
 
 /** Snaps the lane to the nearest whole shift and commits it, unless it ends where it began. */
@@ -456,7 +457,8 @@ export function nudge(axis, idx, dir) {
 	if (!lane.axis) grab(axis, idx);
 	const from = lane.d;
 	lane.steps += dir;
-	sfx.tick();
+	if (mod(lane.steps, laneLen(axis)) === 0) sfx.home();
+	else sfx.tick();
 	game.busy = true;
 	tween(from, lane.steps * pitch(axis), 110, (v) => (lane.d = v), () => (game.busy = false));
 	return true;

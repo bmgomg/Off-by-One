@@ -92,6 +92,19 @@
 		})
 	);
 
+	// Where the player's lane started: the card they took it by (the cursor's: under the pointer, or the keys') gets a
+	// gold rim, and a dashed frame stays at its first place, lighting up when the card is back in it, which is the whole
+	// lane back as it was.
+	const anchor = $derived.by(() => {
+		if (!lane.user || lane.axis === null) return null;
+		const [r, c] = cursor;
+		if ((lane.axis === 'row' ? r : c) !== lane.idx) return null;
+		const P = pitch(lane.axis);
+		const off = mod(lane.d, laneLen(lane.axis) * P);
+		const [x, y] = base(r * game.C + c);
+		return { i: r * game.C + c, x, y, home: Math.min(off, laneLen(lane.axis) * P - off) < P * 0.15 };
+	});
+
 	const band = $derived(
 		lane.axis === 'row'
 			? { x: 0, y: lane.idx * g.pY, w: g.W, h: g.pY }
@@ -132,7 +145,8 @@
 		const step = Math.round(lane.d / pitch(drag.axis));
 		if (step !== drag.last) {
 			drag.last = step;
-			sfx.tick();
+			if (mod(step, laneLen(drag.axis)) === 0) sfx.home();
+			else sfx.tick();
 		}
 	}
 
@@ -191,6 +205,7 @@
 				class="card"
 				class:moving={t.moving}
 				class:bad={badCells.has(t.i)}
+				class:anchor={anchor?.i === t.i}
 				class:cursor={cursor[0] * game.C + cursor[1] === t.i}
 				src={cardImage(t.code)}
 				alt={cardName(t.code)}
@@ -201,8 +216,20 @@
 	{/each}
 
 	{#each tiles.filter((t) => t.ghost) as t (t.code)}
-		<img class="card moving" src={cardImage(t.code)} alt="" aria-hidden="true" draggable="false" style="transform: translate({t.ghost[0]}px, {t.ghost[1]}px)" />
+		<img
+			class="card moving"
+			class:anchor={anchor?.i === t.i}
+			src={cardImage(t.code)}
+			alt=""
+			aria-hidden="true"
+			draggable="false"
+			style="transform: translate({t.ghost[0]}px, {t.ghost[1]}px)"
+		/>
 	{/each}
+
+	{#if anchor}
+		<div class="home-frame" class:home={anchor.home} style="transform: translate({anchor.x}px, {anchor.y}px)"></div>
+	{/if}
 
 	{#each marks as m, n (n)}
 		<span class="mark" style="transform: translate({m.x}px, {m.y}px); width: {m.w}px; height: {m.h}px"></span>
@@ -224,7 +251,8 @@
 
 	.card,
 	.band,
-	.mark {
+	.mark,
+	.home-frame {
 		position: absolute;
 		left: 0;
 		top: 0;
@@ -257,6 +285,34 @@
 		box-shadow:
 			0 0 0 3px var(--gold-pale),
 			0 3px 6px rgba(0, 0, 0, 0.55);
+	}
+
+	/* the card the lane was taken by, as it travels */
+	.card.moving.anchor {
+		box-shadow:
+			0 0 0 2px var(--gold-hi),
+			0 0 16px rgba(216, 180, 100, 0.55),
+			0 10px 18px rgba(0, 0, 0, 0.7);
+	}
+
+	/* its first place, over whatever card passes through it; solid and glowing once it's back */
+	.home-frame {
+		z-index: 2;
+		width: var(--cw);
+		height: var(--ch);
+		box-sizing: border-box;
+		border: 2px dashed rgba(230, 198, 119, 0.75);
+		border-radius: 6px;
+		pointer-events: none;
+		transition:
+			border-color 0.15s,
+			box-shadow 0.15s;
+	}
+
+	.home-frame.home {
+		border-style: solid;
+		border-color: var(--gold-pale);
+		box-shadow: 0 0 14px rgba(243, 220, 156, 0.7);
 	}
 
 	.back {

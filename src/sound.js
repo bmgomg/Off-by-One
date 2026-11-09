@@ -33,6 +33,11 @@ function tone(freq, dur, type = 'sine', vol = 0.06, when = 0) {
 
 export const sfx = {
 	tick: () => tone(2100, 0.025, 'square', 0.018),
+	// a moving lane passing back through where it started: softer and lower than a step's tick, two notes up
+	home: () => {
+		tone(880, 0.05, 'triangle', 0.05);
+		tone(1320, 0.08, 'triangle', 0.04, 0.035);
+	},
 	deal: () => {
 		for (let i = 0; i < 5; i++) tone(700 + i * 110, 0.035, 'triangle', 0.03, i * 0.045);
 	},
