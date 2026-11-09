@@ -11,7 +11,7 @@ import {
 	moveText,
 	points
 } from './logic';
-import { SIZES } from './const';
+import { BOARD_H, BOARD_W, SIZES } from './const';
 
 // A small seeded generator so the tests are repeatable.
 const seeded = (seed) => () => {
@@ -80,8 +80,8 @@ describe('geometry', () => {
 	it('fits every board in the page area', () => {
 		for (const [R, C] of Object.values(SIZES)) {
 			const g = geometry(R, C);
-			expect(g.W).toBeLessThanOrEqual(370);
-			expect(g.H).toBeLessThanOrEqual(420);
+			expect(g.W).toBeLessThanOrEqual(BOARD_W);
+			expect(g.H).toBeLessThanOrEqual(BOARD_H);
 		}
 	});
 });

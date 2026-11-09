@@ -33,6 +33,11 @@ export const MIN_SECS = 3;
 export const TASKS_PER_LEVEL = 5;
 export const MAX_STRIKES = 3;
 
-// The board lives in a fixed area of the 450 × 800 page; cards keep the deck's 0.72 aspect.
-export const BOARD_W = 370;
-export const BOARD_H = 420;
+// The board's area on the 450 × 800 page: wide enough to leave the felt some room inside the page's frame (only 4×5
+// fills it; the others run out of height first), as tall as the room
+// between the stats and the message (the Game Page's .table, less the felt's border and padding). Cards keep the deck's
+// aspect, and the gap between them is a share of the pitch, as in Race the Ace (6 px in 86).
+export const BOARD_W = 390;
+export const BOARD_H = 491;
+export const CARD_RATIO = 0.72;
+export const CARD_GAP = 0.07;

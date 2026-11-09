@@ -70,12 +70,12 @@
 	}
 
 	.outer {
-		inset: 12px;
+		inset: 6px;
 		border: 1px solid var(--gold-line);
 	}
 
 	.inner {
-		inset: 17px;
+		inset: 10px;
 		border: 1px solid var(--gold-faint);
 	}
 

@@ -42,7 +42,10 @@ export function save() {
 	}
 }
 
-/** The puzzle and the run. phase: ready | play | solved | failed | revealed | over. */
+/**
+ * The puzzle and the run. phase: ready | play | wrong | solved | failed | revealed | over.
+ * wrong: a shift that left clashes, awaiting Reset; failed: a challenge trick lost to the clock.
+ */
 export const game = $state({
 	R: 4,
 	C: 5,
@@ -91,6 +94,14 @@ const elapsedMs = () => elapsed + (running ? performance.now() - runStart : 0);
 
 function startTimer() {
 	elapsed = 0;
+	running = true;
+	game.running = true;
+	runStart = performance.now();
+	requestAnimationFrame(frame);
+}
+
+// on from where it stopped, after a Reset
+function resumeTimer() {
 	running = true;
 	game.running = true;
 	runStart = performance.now();
@@ -239,15 +250,25 @@ const othersText = () => {
 	return k > 0 ? ` (or ${k} other${k > 1 ? 's' : ''})` : '';
 };
 
+// A wrong shift: the board waits for Reset. In a challenge it's a strike, and the clock stops till then; the third
+// strike ends the run.
 function onWrong(n) {
 	stopTimer();
 	sfx.lose();
 	flash('lost');
 	const clash = `That leaves ${n} clash${n > 1 ? 'es' : ''}.`;
-	if (app.mode === 'practice') {
-		game.phase = 'failed';
-		say(`${clash} Undo, or see the answer.`, 'bad');
-	} else strike(clash);
+	if (app.mode === 'challenge') {
+		game.run.strikes++;
+		if (game.run.strikes >= MAX_STRIKES) {
+			taskDone();
+			say(`${clash} One fix: ${moveText(game.solutions[0], game.R, game.C)}${othersText()}.`, 'bad');
+			return;
+		}
+		say(`${clash} That's a strike.`, 'bad');
+	} else {
+		say(clash, 'bad');
+	}
+	game.phase = 'wrong';
 }
 
 function onTimeout() {
@@ -266,11 +287,17 @@ function strike(reason) {
 	say(`${reason} One fix: ${moveText(game.solutions[0], game.R, game.C)}${othersText()}.`, 'bad');
 }
 
-export function undo() {
-	if (game.busy) return;
+/** After a wrong shift: the board as dealt, to try again; a challenge's clock runs on from where it stopped. */
+export function reset() {
+	if (game.busy || game.phase !== 'wrong') return;
 	game.grid = game.puzzle.slice();
 	game.phase = 'play';
-	say('Back as it was. You still get one shift.');
+	if (app.mode === 'challenge') {
+		say('Back as it was. The clock runs on.');
+		resumeTimer();
+	} else {
+		say('Back as it was. You still get one shift.');
+	}
 }
 
 export function review() {

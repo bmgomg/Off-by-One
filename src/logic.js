@@ -1,5 +1,5 @@
 // Pure game rules: cards, neighbor rules, puzzle generation, levels and board geometry.
-import { BOARD_H, BOARD_W, DECAY_SECS, LEVELS, MIN_SECS } from './const';
+import { BOARD_H, BOARD_W, CARD_GAP, CARD_RATIO, DECAY_SECS, LEVELS, MIN_SECS } from './const';
 
 // A card is suit * 100 + rank: suits 1 clubs, 2 diamonds, 3 hearts, 4 spades; ranks 2–14 (J 11, Q 12, K 13, A 14).
 export const ALL = [];
@@ -132,11 +132,13 @@ export function moveText(m, R, C) {
 	return `${m.axis} ${m.idx + 1} ${dir} by ${k}`;
 }
 
+// The largest cards that fit: p is the column pitch, pY the row pitch, each a card and a gap.
 export function geometry(R, C) {
-	const p = Math.floor(Math.min(BOARD_W / C, BOARD_H / (R * 1.35)));
-	const gap = Math.max(4, Math.round(p * 0.108));
-	const cw = p - gap;
-	const ch = Math.round(cw / 0.72);
-	const pY = ch + gap;
-	return { p, pY, gap, cw, ch, W: C * p, H: R * pY };
+	for (let p = Math.floor(BOARD_W / C); ; p--) {
+		const gap = Math.max(4, Math.round(p * CARD_GAP));
+		const cw = p - gap;
+		const ch = Math.round(cw / CARD_RATIO);
+		const pY = ch + gap;
+		if (R * pY <= BOARD_H) return { p, pY, gap, cw, ch, W: C * p, H: R * pY };
+	}
 }

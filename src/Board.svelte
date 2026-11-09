@@ -53,7 +53,8 @@
 	const showClashes = $derived(
 		lane.axis === null &&
 			!game.busy &&
-			(game.phase === 'failed' ||
+			(game.phase === 'wrong' ||
+				game.phase === 'failed' ||
 				game.phase === 'over' ||
 				(app.mode === 'practice' && game.showClashes && game.phase === 'play'))
 	);

@@ -15,14 +15,14 @@
 		showAnswer,
 		startPlay,
 		toggleSound,
-		undo
+		reset
 	} from './shared.svelte';
 	import { pushIn, pushOut, slideX } from './utils';
 
 	const challenge = $derived(app.mode === 'challenge');
 	const run = $derived(game.run);
 	const inLevel = $derived(
-		game.phase === 'play' || game.phase === 'ready' ? (run.tasks % TASKS_PER_LEVEL) + 1 : ((run.tasks - 1) % TASKS_PER_LEVEL) + 1
+		['ready', 'play', 'wrong'].includes(game.phase) ? (run.tasks % TASKS_PER_LEVEL) + 1 : ((run.tasks - 1) % TASKS_PER_LEVEL) + 1
 	);
 	const total = $derived(levelSecs() * 1000);
 	const leftFrac = $derived(Math.max(0, Math.min(1, game.left / total)));
@@ -118,12 +118,10 @@
 				<p class="msg {game.msg.tone}">{game.msg.text}</p>
 
 				<div class="actions">
-					{#if game.phase === 'failed'}
-						{#if challenge}
-							<button type="button" class="btn small primary" onclick={next}>Next trick</button>
-						{:else}
-							<button type="button" class="btn small primary" onclick={undo}>Undo</button>
-						{/if}
+					{#if game.phase === 'wrong'}
+						<button type="button" class="btn small primary" onclick={reset}>Reset</button>
+					{:else if game.phase === 'failed'}
+						<button type="button" class="btn small primary" onclick={next}>Next trick</button>
 						<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
 					{:else if game.phase === 'solved' || game.phase === 'revealed'}
 						<button type="button" class="btn small primary" onclick={next}>Next trick</button>
@@ -154,8 +152,8 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 30px 24px 0;
-		gap: 8px;
+		padding: 18px 12px 0;
+		gap: 6px;
 	}
 
 	.title {
@@ -179,7 +177,7 @@
 
 	.stats {
 		width: 100%;
-		min-height: 46px;
+		min-height: 44px;
 		box-sizing: border-box;
 		padding: 0 14px;
 		display: flex;
@@ -332,18 +330,18 @@
 	.table {
 		position: relative;
 		width: 100%;
-		height: 440px;
+		/* all the height the rest leaves: see BOARD_H */
+		flex: 1;
+		min-height: 0;
 		display: grid;
 		place-items: center;
-		flex: none;
 	}
 
+	/* one gold line, and little padding: the page's double frame is just outside it */
 	.felt {
-		padding: 10px;
+		padding: 5px;
 		background: #120609;
 		border: 1px solid var(--gold);
-		outline: 1px solid rgba(216, 180, 100, 0.35);
-		outline-offset: 4px;
 		box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6);
 		transition:
 			border-color 0.3s,
@@ -434,16 +432,16 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 8px;
+		gap: 6px;
 	}
 
 	.msg {
 		margin: 0;
-		min-height: 48px;
-		max-width: 380px;
+		min-height: 44px;
+		max-width: 400px;
 		font-style: italic;
-		font-size: 19px;
-		line-height: 1.25;
+		font-size: 18px;
+		line-height: 1.2;
 		color: var(--cream);
 		text-align: center;
 	}
@@ -501,11 +499,11 @@
 		display: flex;
 		justify-content: space-around;
 		border-top: 1px solid var(--gold-faint);
-		padding: 10px 6px 24px;
+		padding: 4px 6px 14px;
 	}
 
 	.toolbar button {
-		min-height: 44px;
+		min-height: 42px;
 		padding: 0 8px;
 		background: none;
 		border: 0;
