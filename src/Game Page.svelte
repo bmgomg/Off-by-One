@@ -1,7 +1,7 @@
 <script>
-	import { fade, scale } from 'svelte/transition';
 	import Board from './Board.svelte';
-	import { MAX_STRIKES, RULES, SIZES, TASKS_PER_LEVEL, levelInfo } from './logic.js';
+	import { MAX_STRIKES, SIZES, STRIP_SLIDE_MS, TASKS_PER_LEVEL } from './const';
+	import { RULES, levelInfo } from './logic';
 	import {
 		app,
 		game,
@@ -16,7 +16,8 @@
 		startPlay,
 		toggleSound,
 		undo
-	} from './state.svelte.js';
+	} from './shared.svelte';
+	import { pushIn, pushOut, slideX } from './utils';
 
 	const challenge = $derived(app.mode === 'challenge');
 	const run = $derived(game.run);
@@ -27,6 +28,8 @@
 	const leftFrac = $derived(Math.max(0, Math.min(1, game.left / total)));
 	const leftSecs = $derived(Math.ceil(game.left / 1000));
 	const best = $derived(app.best[app.rule] || 0);
+	// the message and buttons under the board change as one, by a push
+	const strip = $derived(`${game.phase} ${game.reviewing} ${game.msg.text}`);
 
 	// What the level prompt says changed.
 	const prompt = $derived.by(() => {
@@ -84,8 +87,8 @@
 		</div>
 
 		{#if challenge && game.phase === 'ready'}
-			<div class="overlay" transition:fade={{ duration: 180 }}>
-				<div class="panel" in:scale={{ start: 0.92, duration: 220 }}>
+			<div class="overlay">
+				<div class="panel" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
 					<h2>Act {run.level}</h2>
 					<ul>
 						{#each prompt.lines as line, n (n)}<li>{line}</li>{/each}
@@ -94,8 +97,8 @@
 				</div>
 			</div>
 		{:else if game.phase === 'over' && !game.reviewing}
-			<div class="overlay" transition:fade={{ duration: 180 }}>
-				<div class="panel" in:scale={{ start: 0.92, duration: 220 }}>
+			<div class="overlay">
+				<div class="panel" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
 					<h2>Final curtain</h2>
 					<div class="big">{run.score}</div>
 					<p>{run.solved} of {run.tasks} tricks solved, reached act {run.level}. {run.newBest ? 'A new best!' : `Best: ${best}.`}</p>
@@ -108,22 +111,29 @@
 		{/if}
 	</div>
 
-	<p class="msg {game.msg.tone}" aria-live="polite">{game.msg.text}</p>
+	<!-- what to do next: a new message and its buttons push the old ones out to the left -->
+	<div class="strip" aria-live="polite">
+		{#key strip}
+			<div class="step" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
+				<p class="msg {game.msg.tone}">{game.msg.text}</p>
 
-	<div class="actions">
-		{#if game.phase === 'failed'}
-			{#if challenge}
-				<button type="button" class="btn small primary" onclick={next}>Next trick</button>
-			{:else}
-				<button type="button" class="btn small primary" onclick={undo}>Undo</button>
-			{/if}
-			<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
-		{:else if game.phase === 'solved' || game.phase === 'revealed'}
-			<button type="button" class="btn small primary" onclick={next}>Next trick</button>
-		{:else if game.phase === 'over' && game.reviewing}
-			<button type="button" class="btn small primary" onclick={newRun}>Encore</button>
-			<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
-		{/if}
+				<div class="actions">
+					{#if game.phase === 'failed'}
+						{#if challenge}
+							<button type="button" class="btn small primary" onclick={next}>Next trick</button>
+						{:else}
+							<button type="button" class="btn small primary" onclick={undo}>Undo</button>
+						{/if}
+						<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
+					{:else if game.phase === 'solved' || game.phase === 'revealed'}
+						<button type="button" class="btn small primary" onclick={next}>Next trick</button>
+					{:else if game.phase === 'over' && game.reviewing}
+						<button type="button" class="btn small primary" onclick={newRun}>Encore</button>
+						<button type="button" class="btn small" onclick={showAnswer}>Reveal</button>
+					{/if}
+				</div>
+			</div>
+		{/key}
 	</div>
 
 	<nav class="toolbar">
@@ -406,6 +416,19 @@
 	.row {
 		display: flex;
 		gap: 12px;
+	}
+
+	.strip {
+		width: 100%;
+		display: grid;
+	}
+
+	.step {
+		grid-area: 1/1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
 	}
 
 	.msg {

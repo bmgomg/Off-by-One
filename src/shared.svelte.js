@@ -1,41 +1,38 @@
-import {
-	MAX_STRIKES,
-	RULES,
-	SIZES,
-	TASKS_PER_LEVEL,
-	applyMove,
-	badPairs,
-	geometry,
-	levelInfo,
-	makePuzzle,
-	mod,
-	moveText,
-	points
-} from './logic.js';
-import { setSound, sfx } from './sound.js';
+import { APP_STATE, MAX_STRIKES, SIZES, TASKS_PER_LEVEL } from './const';
+import { RULES, applyMove, badPairs, geometry, levelInfo, makePuzzle, mod, moveText, points } from './logic';
+import { setSound, sfx } from './sound';
+import { reducedMotion, tween } from './utils';
 
-const KEY = 'off-by-one';
+const KEY = APP_STATE;
 
-const load = () => {
-	try {
-		return JSON.parse(localStorage.getItem(KEY)) || {};
-	} catch {
-		return {};
-	}
-};
-
-const saved = typeof localStorage === 'undefined' ? {} : load();
-
-/** Settings and records that persist. */
+/** Settings and records that persist; loadSettings fills them in from the save. */
 export const app = $state({
 	page: 'home',
 	mode: 'practice',
-	rule: RULES[saved.rule] ? saved.rule : 'gap',
-	size: SIZES[saved.size] ? saved.size : '4x5',
-	sound: saved.sound !== false,
-	best: saved.best || {}
+	rule: 'gap',
+	size: '4x5',
+	sound: true,
+	best: {}
 });
-setSound(app.sound);
+
+// Called once Home is up, after the splash, so a tap on the splash (which wipes the save) comes first.
+let loaded = false;
+
+export function loadSettings() {
+	if (loaded) return;
+	loaded = true;
+	let saved = {};
+	try {
+		saved = JSON.parse(localStorage.getItem(KEY)) || {};
+	} catch {
+		// nothing saved, or storage unavailable
+	}
+	app.rule = RULES[saved.rule] ? saved.rule : 'gap';
+	app.size = SIZES[saved.size] ? saved.size : '4x5';
+	app.sound = saved.sound !== false;
+	app.best = saved.best || {};
+	setSound(app.sound);
+}
 
 export function save() {
 	try {
@@ -83,20 +80,6 @@ const flash = (kind) => {
 	game.flash = kind;
 	setTimeout(() => (game.flash = ''), 900);
 };
-
-const reduced = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-export function tween(from, to, ms, onFrame, done) {
-	if (reduced()) ms = 0;
-	const t0 = performance.now();
-	const f = (now) => {
-		const t = ms ? Math.min(1, (now - t0) / ms) : 1;
-		onFrame(from + (to - from) * (1 - Math.pow(1 - t, 3)));
-		if (t < 1) requestAnimationFrame(f);
-		else done?.();
-	};
-	requestAnimationFrame(f);
-}
 
 // ---------- timer ----------
 
@@ -312,7 +295,7 @@ export function showAnswer() {
 				say(`The trick: ${moveText(m, game.R, game.C)}${othersText()}.`);
 			});
 		},
-		reduced() ? 0 : 250
+		reducedMotion() ? 0 : 250
 	);
 }
 

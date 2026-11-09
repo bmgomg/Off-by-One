@@ -1,7 +1,7 @@
 <script>
-	import { cardImage, cardName } from './cards.js';
-	import { mod } from './logic.js';
-	import { sfx } from './sound.js';
+	import { cardImage, cardName } from './cards';
+	import { mod } from './logic';
+	import { sfx } from './sound';
 	import {
 		app,
 		canMove,
@@ -15,7 +15,7 @@
 		nudge,
 		pitch,
 		settle
-	} from './state.svelte.js';
+	} from './shared.svelte';
 
 	let boardEl = $state();
 	let cursor = $state([0, 0]);

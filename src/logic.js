@@ -1,4 +1,5 @@
 // Pure game rules: cards, neighbor rules, puzzle generation, levels and board geometry.
+import { BOARD_H, BOARD_W, DECAY_SECS, LEVELS, MIN_SECS } from './const';
 
 // A card is suit * 100 + rank: suits 1 clubs, 2 diamonds, 3 hearts, 4 spades; ranks 2–14 (J 11, Q 12, K 13, A 14).
 export const ALL = [];
@@ -20,23 +21,6 @@ export const RULES = {
 		text: 'Touching cards must share a suit or a rank.'
 	}
 };
-
-export const SIZES = { '4x4': [4, 4], '4x5': [4, 5], '5x5': [5, 5] };
-
-// Challenge: the board grows first, then the clock shrinks. Past the table each level loses
-// DECAY_SECS more, down to MIN_SECS, so every run ends eventually.
-export const LEVELS = [
-	{ size: '4x4', secs: 60 },
-	{ size: '4x5', secs: 60 },
-	{ size: '5x5', secs: 60 },
-	{ size: '5x5', secs: 50 },
-	{ size: '5x5', secs: 40 },
-	{ size: '5x5', secs: 30 }
-];
-export const DECAY_SECS = 3;
-export const MIN_SECS = 3;
-export const TASKS_PER_LEVEL = 5;
-export const MAX_STRIKES = 3;
 
 export const levelInfo = (L) => {
 	if (L <= LEVELS.length) return LEVELS[L - 1];
@@ -147,10 +131,6 @@ export function moveText(m, R, C) {
 	const dir = m.axis === 'row' ? (fwd ? 'right' : 'left') : fwd ? 'down' : 'up';
 	return `${m.axis} ${m.idx + 1} ${dir} by ${k}`;
 }
-
-// The board lives in a fixed area of the 450 × 800 page; cards keep the deck's 0.72 aspect.
-export const BOARD_W = 370;
-export const BOARD_H = 420;
 
 export function geometry(R, C) {
 	const p = Math.floor(Math.min(BOARD_W / C, BOARD_H / (R * 1.35)));

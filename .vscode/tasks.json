@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			// the dev server on port 1130, kept running between debug sessions: F5 starts it once, then reuses it
+			"label": "dev server",
+			"type": "npm",
+			"script": "dev",
+			"isBackground": true,
+			"problemMatcher": {
+				"owner": "vite",
+				"pattern": { "regexp": "^__never__$" },
+				"background": {
+					"activeBegins": true,
+					"beginsPattern": "vite",
+					"endsPattern": "Local"
+				}
+			}
+		}
+	]
+}

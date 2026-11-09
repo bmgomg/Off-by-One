@@ -1,10 +1,4 @@
 <script>
-	import '@fontsource/limelight';
-	import '@fontsource/cormorant-garamond/500.css';
-	import '@fontsource/cormorant-garamond/700.css';
-	import '@fontsource/cormorant-garamond/500-italic.css';
-	import '@fontsource/cormorant-sc/600.css';
-
 	let { children } = $props();
 </script>
 
@@ -29,9 +23,9 @@
 			--red: #a01d2d;
 			--bad: #ff6b6b;
 			--good: #9fdc9a;
-			--display: 'Limelight', 'Georgia', serif;
-			--text: 'Cormorant Garamond', 'Georgia', serif;
-			--caps: 'Cormorant SC', 'Georgia', serif;
+			--display: LM, Georgia, serif;
+			--text: CG, Georgia, serif;
+			--caps: CSC, Georgia, serif;
 		}
 
 		html,
@@ -43,6 +37,51 @@
 			font-family: var(--text);
 			-webkit-tap-highlight-color: transparent;
 			overscroll-behavior: none;
+		}
+
+		.nohi {
+			-webkit-tap-highlight-color: transparent;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			user-select: none;
+		}
+
+		/* titles and big numbers */
+		@font-face {
+			font-family: LM;
+			font-display: swap;
+			src: url('$lib/fonts/Limelight.woff2') format('woff2');
+		}
+
+		/* text, and its italic for messages and asides */
+		@font-face {
+			font-family: CG;
+			font-weight: 500;
+			font-display: swap;
+			src: url('$lib/fonts/Cormorant Garamond Medium.woff2') format('woff2');
+		}
+
+		@font-face {
+			font-family: CG;
+			font-weight: 700;
+			font-display: swap;
+			src: url('$lib/fonts/Cormorant Garamond Bold.woff2') format('woff2');
+		}
+
+		@font-face {
+			font-family: CG;
+			font-weight: 500;
+			font-style: italic;
+			font-display: swap;
+			src: url('$lib/fonts/Cormorant Garamond Medium Italic.woff2') format('woff2');
+		}
+
+		/* labels and the toolbar */
+		@font-face {
+			font-family: CSC;
+			font-weight: 600;
+			font-display: swap;
+			src: url('$lib/fonts/Cormorant SC SemiBold.woff2') format('woff2');
 		}
 
 		button {

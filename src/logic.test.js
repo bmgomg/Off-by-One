@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
 	ALL,
 	RULES,
-	SIZES,
 	allMoves,
 	applyMove,
 	badPairs,
@@ -11,7 +10,8 @@ import {
 	makePuzzle,
 	moveText,
 	points
-} from './logic.js';
+} from './logic';
+import { SIZES } from './const';
 
 // A small seeded generator so the tests are repeatable.
 const seeded = (seed) => () => {

@@ -1,0 +1,38 @@
+// the prefix of every key this game saves under; a tap on the splash wipes them all
+export const APP_STATE = 'BMG • Off by One';
+// the page is designed at DX × DY and scales to fit the window
+export const DX = 450;
+export const DY = 800;
+
+export const TITLE = 'Off by One';
+export const TAGLINE = 'Shift happens.';
+
+// the splash slides off to the left as the page slides in from the right, pushing it, in this long
+export const SPLASH_SLIDE_MS = 700;
+// One page pushes another the same way, in this long. They stand in a row, Home then a game, so going on pushes to the
+// left and Back to the right.
+export const PAGE_SLIDE_MS = 500;
+// The act and final-curtain panels, and the message and buttons under the board, change by a push too, in this long:
+// the page stays, so it's quicker.
+export const STRIP_SLIDE_MS = 400;
+
+export const SIZES = { '4x4': [4, 4], '4x5': [4, 5], '5x5': [5, 5] };
+
+// Challenge: the board grows first, then the clock shrinks. Past the table each level loses
+// DECAY_SECS more, down to MIN_SECS, so every run ends eventually.
+export const LEVELS = [
+	{ size: '4x4', secs: 60 },
+	{ size: '4x5', secs: 60 },
+	{ size: '5x5', secs: 60 },
+	{ size: '5x5', secs: 50 },
+	{ size: '5x5', secs: 40 },
+	{ size: '5x5', secs: 30 }
+];
+export const DECAY_SECS = 3;
+export const MIN_SECS = 3;
+export const TASKS_PER_LEVEL = 5;
+export const MAX_STRIKES = 3;
+
+// The board lives in a fixed area of the 450 × 800 page; cards keep the deck's 0.72 aspect.
+export const BOARD_W = 370;
+export const BOARD_H = 420;

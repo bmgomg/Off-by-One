@@ -11,19 +11,24 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"test": "vitest --run"
+		"test": "vitest --run",
+		"lint": "eslint . && prettier --check .",
+		"format": "prettier --write ."
 	},
 	"devDependencies": {
+		"@eslint/compat": "^2.1.1",
+		"@eslint/js": "^10.0.1",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.70.3",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"eslint": "^10.14.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.24.0",
+		"globals": "^17.14.0",
+		"prettier": "^3.9.10",
+		"prettier-plugin-svelte": "^4.1.1",
 		"svelte": "^5.57.2",
 		"vite": "^8.3.0",
 		"vitest": "^4.1.8"
-	},
-	"dependencies": {
-		"@fontsource/cormorant-garamond": "^5.2.0",
-		"@fontsource/cormorant-sc": "^5.2.0",
-		"@fontsource/limelight": "^5.2.0"
 	}
 }

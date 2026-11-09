@@ -5,14 +5,15 @@
 A card puzzle for the SHIFT jam: one row or column has slipped out of place. Slide it back.
 The lane wraps around, and you get one shift per puzzle.
 
-A SvelteKit app (Svelte 5), built as a static site. The look is "Sleight of Hand": a magician's
-velvet-and-gold stage, on a 450 × 800 page that scales to fit the window.
+A SvelteKit app (Svelte 5), built as a static site, laid out as `C:\git\BMG\Dark Matter` is: splash, Home, Game Page.
+The look is "Sleight of Hand": a magician's velvet-and-gold stage, on a 450 × 800 page that scales to fit the window.
 
 ```sh
 npm install
 npm run dev      # http://localhost:1130
 npm test         # the rules, generator, levels and board sizes
 npm run build    # static site in build/
+npm run lint     # eslint and prettier, as in Dark Matter
 ```
 
 `prototype/index.html` is the original single-file prototype (no build step); it still has the
@@ -20,11 +21,23 @@ playtest extras ("Start at level", rule and size switches in one place).
 
 ## Files
 
-- `src/lib/logic.js`: cards, the two rule sets, puzzle generation, levels, scoring, board geometry (tested in `logic.test.js`).
-- `src/lib/state.svelte.js`: settings (saved), the puzzle and the run, the timer, and moving a lane.
-- `src/lib/Board.svelte`: the cards, dragging with the wrap copy, keyboard, clash marks.
-- `src/lib/Game.svelte`, `src/lib/Home.svelte`: the two pages. `src/lib/sound.js`: synthesized effects.
-- `src/lib/cards/`: the deck (52 webp faces with transparent backgrounds; the board paints the ivory face).
+- `src/const.js`: title, slide timings, board sizes, the challenge's levels and limits, the board's area.
+- `src/logic.js`: cards, the two rule sets, puzzle generation, levels, scoring, board geometry (tested in `logic.test.js`).
+- `src/shared.svelte.js`: settings (saved under `APP_STATE`, loaded once Home is up), the puzzle and the run, the timer, and moving a lane.
+- `src/utils.js`: `tween`, and `slideX` / `pushIn` / `pushOut`, the slide transitions.
+- `src/Splash.svelte`, `src/Home.svelte`, `src/Game Page.svelte`, `src/Board.svelte` (the cards, dragging with the wrap copy, keyboard, clash marks).
+- `src/sound.js`: synthesized effects. `src/cards.js`: the deck's images and names.
+- `src/lib/images/cards/`: the deck (52 webp faces with transparent backgrounds; the board paints the ivory face).
+  `src/lib/images/BMG.webp`: the splash's logo, the template's.
+- `src/lib/fonts/`: Limelight (`LM`, titles), Cormorant Garamond (`CG`, text), Cormorant SC (`CSC`, labels), latin subsets, with their OFL texts.
+
+## Splash and slides
+
+The template's BMG splash, as in Dark Matter: a tap on it wipes this game's saves. It goes by a push, not a fade: it slides
+off to the left as the page slides in from the right (`SPLASH_SLIDE_MS`, 0.7 s, ease-in-out). Home and the game stand in a
+row, so Play pushes Home off to the left and Back brings it back from there (`PAGE_SLIDE_MS`, 0.5 s); the gold frame holds
+still. The act and final-curtain panels slide in from the right and out to the left, and so does the message under the
+board with its buttons, a new one pushing the old out (`STRIP_SLIDE_MS`, 0.4 s). With reduced motion they're instant.
 
 ## Rules
 
@@ -73,4 +86,5 @@ Simulated rule sets (one random shift applied to a valid grid, 200–300 puzzles
 ## Open questions
 
 - Lowest playable time limit, and whether to drop 3 or 5 seconds per level, or a percentage.
-- Not yet in the app: music, offline play (PWA), resuming a run after Back, a playtest level jump.
+- Not yet in the app: music, offline play (PWA: Dark Matter's service worker and manifest need app icons first), the
+  itch.io build, resuming a run after Back, a playtest level jump.

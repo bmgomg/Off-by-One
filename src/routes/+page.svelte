@@ -1,40 +1,46 @@
 <script>
-	import { fade } from 'svelte/transition';
-	import Game from '$lib/Game.svelte';
-	import Home from '$lib/Home.svelte';
-	import { wakeAudio } from '$lib/sound.js';
-	import { app } from '$lib/state.svelte.js';
+	import GamePage from '../Game Page.svelte';
+	import Home from '../Home.svelte';
+	import Splash from '../Splash.svelte';
+	import { DX, DY, PAGE_SLIDE_MS, SPLASH_SLIDE_MS } from '../const';
+	import { app } from '../shared.svelte';
+	import { wakeAudio } from '../sound';
+	import { post, slideX } from '../utils';
 
-	// The page is designed at 450 × 800 and scales to fit the window.
-	const W = 450;
-	const H = 800;
-	let ww = $state(W);
-	let wh = $state(H);
-	const scale = $derived(Math.min(ww / W, wh / H));
+	// the page is designed at DX × DY and scales to fit the window
+	let ww = $state(DX);
+	let wh = $state(DY);
+	const scale = $derived(Math.min(ww / DX, wh / DY));
+
+	let splash = $state(true);
+	post(() => (splash = false), 2000);
+
+	// the pages stand in a row, Home then a game: Home leaves to the left and comes back from there, a game the other way
+	const push = (from) => ({ from, unit: '%', duration: PAGE_SLIDE_MS });
 </script>
 
 <svelte:window bind:innerWidth={ww} bind:innerHeight={wh} onpointerdown={wakeAudio} onkeydown={wakeAudio} />
 
-<div class="stage">
-	<div class="frame" style="width: {W * scale}px; height: {H * scale}px">
-		<main class="page" style="transform: scale({scale})">
-			<div class="border outer" aria-hidden="true"></div>
-			<div class="border inner" aria-hidden="true"></div>
-			{#key app.page}
-				<div class="view" in:fade={{ duration: 260, delay: 120 }} out:fade={{ duration: 120 }}>
-					{#if app.page === 'home'}
-						<Home />
-					{:else}
-						<Game />
-					{/if}
-				</div>
-			{/key}
-		</main>
-	</div>
+<div id="app" class="nohi">
+	{#if splash}
+		<Splash />
+	{:else}
+		<div id="app-content" in:slideX={{ from: 100, duration: SPLASH_SLIDE_MS }} style="width: {DX * scale}px; height: {DY * scale}px">
+			<main class="page" style="width: {DX}px; height: {DY}px; transform: scale({scale})">
+				<div class="border outer" aria-hidden="true"></div>
+				<div class="border inner" aria-hidden="true"></div>
+				{#if app.page === 'home'}
+					<div class="view" transition:slideX={push(-100)}><Home /></div>
+				{:else}
+					<div class="view" transition:slideX={push(100)}><GamePage /></div>
+				{/if}
+			</main>
+		</div>
+	{/if}
 </div>
 
 <style>
-	.stage {
+	#app {
 		position: fixed;
 		inset: 0;
 		display: grid;
@@ -42,7 +48,7 @@
 		overflow: hidden;
 	}
 
-	.frame {
+	#app-content {
 		position: relative;
 	}
 
@@ -50,14 +56,11 @@
 		position: absolute;
 		left: 0;
 		top: 0;
-		width: 450px;
-		height: 800px;
 		transform-origin: 0 0;
+		/* the page waiting off to the side, and one sliding in or out, show only within it */
 		overflow: hidden;
 		background: radial-gradient(ellipse at 30% 0%, var(--velvet-hi) 0%, var(--velvet) 58%, var(--velvet-lo) 100%);
 		box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
-		user-select: none;
-		-webkit-user-select: none;
 	}
 
 	.border {

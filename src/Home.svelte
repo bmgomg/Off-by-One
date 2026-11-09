@@ -1,7 +1,11 @@
 <script>
-	import { cardImage } from './cards.js';
-	import { RULES } from './logic.js';
-	import { app, setRule, startChallenge, startPractice } from './state.svelte.js';
+	import { onMount } from 'svelte';
+	import { cardImage } from './cards';
+	import { TAGLINE } from './const';
+	import { RULES } from './logic';
+	import { app, loadSettings, setRule, startChallenge, startPractice } from './shared.svelte';
+
+	onMount(loadSettings);
 </script>
 
 <div class="home">
@@ -13,7 +17,7 @@
 
 	<div class="titles">
 		<h1>Off <span class="by">by</span> One</h1>
-		<div class="tagline">Shift happens.</div>
+		<div class="tagline">{TAGLINE}</div>
 	</div>
 
 	<div class="divider" aria-hidden="true"><span></span><i></i><span></span></div>
