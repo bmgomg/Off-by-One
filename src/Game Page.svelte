@@ -1,5 +1,6 @@
 <script>
 	import NumberFlow, { NumberFlowGroup } from '@number-flow/svelte';
+	import { untrack } from 'svelte';
 	import Board from './Board.svelte';
 	import { MAX_STRIKES, SIZES, STRIP_SLIDE_MS, TASKS_PER_LEVEL } from './const';
 	import { RULES, levelInfo } from './logic';
@@ -17,7 +18,9 @@
 		showAnswer,
 		startPlay,
 		toggleSound,
-		reset
+		reset,
+		resume,
+		saveGame
 	} from './shared.svelte';
 	import { pushIn, pushOut, slideX } from './utils';
 
@@ -31,8 +34,16 @@
 	const leftFrac = $derived(Math.max(0, Math.min(1, game.left / total)));
 	const leftSecs = $derived(Math.ceil(game.left / 1000));
 	const best = $derived(app.best[app.rule] || 0);
-	// the message and buttons under the board change as one, by a push
-	const strip = $derived(`${game.phase} ${game.reviewing} ${game.msg.text}`);
+	// the message and buttons under the board change as one, by a push; a paused game's wait under its panel
+	const strip = $derived(`${game.phase} ${game.reviewing} ${game.msg.text} ${!!game.paused}`);
+
+	// The game is saved whenever it changes, and each second of the clock, so it can be come back to, after a restart
+	// too. (Saving reads all of it, the clock's every frame included, hence the untrack.)
+	$effect(() => {
+		JSON.stringify([game.R, game.C, game.grid, game.phase, game.msg, game.reviewing, game.showClashes, game.paused, game.run, game.practice]);
+		void leftSecs;
+		untrack(() => saveGame());
+	});
 
 	// What the level prompt says changed.
 	const prompt = $derived.by(() => {
@@ -101,7 +112,15 @@
 			{/key}
 		</div>
 
-		{#if challenge && game.phase === 'ready'}
+		{#if game.paused}
+			<!-- a game come back to, its board face down till Resume, as in Race the Ace -->
+			<div class="overlay">
+				<div class="panel" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
+					<h2>{challenge ? 'Show' : 'Puzzle'} in progress</h2>
+					<button type="button" class="btn primary" onclick={resume}>Resume</button>
+				</div>
+			</div>
+		{:else if challenge && game.phase === 'ready'}
 			<div class="overlay">
 				<div class="panel" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
 					<h2>Act {run.level}</h2>
@@ -130,10 +149,12 @@
 	<div class="strip" aria-live="polite">
 		{#key strip}
 			<div class="step" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
-				<p class="msg {game.msg.tone}">{game.msg.text}</p>
+				<p class="msg {game.msg.tone}">{game.paused ? '' : game.msg.text}</p>
 
 				<div class="actions">
-					{#if game.phase === 'wrong'}
+					{#if game.paused}
+						<!-- nothing till Resume -->
+					{:else if game.phase === 'wrong'}
 						<button type="button" class="btn small primary" onclick={reset}>Reset</button>
 					{:else if game.phase === 'failed'}
 						<button type="button" class="btn small primary" onclick={next}>Next trick</button>

@@ -3,7 +3,7 @@
 	import Home from '../Home.svelte';
 	import Splash from '../Splash.svelte';
 	import { DX, DY, PAGE_SLIDE_MS, SPLASH_SLIDE_MS } from '../const';
-	import { app } from '../shared.svelte';
+	import { app, saveGame } from '../shared.svelte';
 	import { wakeAudio } from '../sound';
 	import { post, slideX } from '../utils';
 
@@ -17,9 +17,15 @@
 
 	// the pages stand in a row, Home then a game: Home leaves to the left and comes back from there, a game the other way
 	const push = (from) => ({ from, unit: '%', duration: PAGE_SLIDE_MS });
+
+	// the game in play is saved as the app is hidden or closed, with the clock's time to the moment
+	const saveNow = () => {
+		if (app.page === 'game') saveGame();
+	};
 </script>
 
-<svelte:window bind:innerWidth={ww} bind:innerHeight={wh} onpointerdown={wakeAudio} onkeydown={wakeAudio} />
+<svelte:window bind:innerWidth={ww} bind:innerHeight={wh} onpointerdown={wakeAudio} onkeydown={wakeAudio} onpagehide={saveNow} />
+<svelte:document onvisibilitychange={() => document.visibilityState === 'hidden' && saveNow()} />
 
 <div id="app" class="nohi">
 	{#if splash}

@@ -77,6 +77,16 @@ in `src/const.js`. In the app's theme a level is an "act", a puzzle a "trick", t
 Practice has no timer and a board-size choice, and lets you mark clashes. A wrong shift shows the same single Reset;
 there's no Reveal in Practice any more.
 
+## Coming back to a game
+
+Each mode's game is saved in localStorage (`APP_STATE • practice`, `APP_STATE • challenge`) as it changes, each second of
+the clock, on Back, and when the app is hidden: the puzzle and where it stands, the clock's time used and whether it was
+running, the rules it was dealt under, the shift Reset would undo, and Practice's tally or the run. Going to a mode
+again, after a restart too, brings its game back face down under a panel, "Puzzle in progress" or "Show in progress",
+with Resume, as in Race the Ace: it doesn't resume by itself (the designer's call), and the clock waits for Resume. New
+Deal or New Show starts afresh instead. A solved or revealed practice puzzle, a run that's over, or a game dealt under
+the other rules isn't brought back; a run waiting at an act's panel comes back to that panel, which is a prompt already.
+
 ## Design notes
 
 Why shifting differs from swapping: a 4×5 board has 31 possible shifts against 190 swaps. A row
@@ -96,4 +106,4 @@ Simulated rule sets (one random shift applied to a valid grid, 200–300 puzzles
 
 - Lowest playable time limit, and whether to drop 3 or 5 seconds per level, or a percentage.
 - Not yet in the app: music, offline play (PWA: Dark Matter's service worker and manifest need app icons first), the
-  itch.io build, resuming a run after Back, a playtest level jump.
+  itch.io build, a playtest level jump.

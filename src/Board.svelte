@@ -22,7 +22,7 @@
 	let drag = null;
 
 	const g = $derived(geo());
-	const veiled = $derived(game.phase === 'ready');
+	const veiled = $derived(game.phase === 'ready' || !!game.paused);
 
 	const base = (i) => [(i % game.C) * g.p + g.gap / 2, Math.floor(i / game.C) * g.pY + g.gap / 2];
 	const laneOf = (i) => (lane.axis === 'row' ? Math.floor(i / game.C) : i % game.C);
@@ -53,6 +53,7 @@
 	const showClashes = $derived(
 		lane.axis === null &&
 			!game.busy &&
+			!game.paused &&
 			(game.phase === 'wrong' ||
 				game.phase === 'failed' ||
 				game.phase === 'over' ||

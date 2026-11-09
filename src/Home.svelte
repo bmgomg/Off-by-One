@@ -36,8 +36,8 @@
 	</div>
 
 	<div class="actions">
-		<button type="button" class="btn" onclick={startPractice}>Practice</button>
-		<button type="button" class="btn primary" onclick={startChallenge}>Challenge</button>
+		<button type="button" class="btn" onclick={() => startPractice()}>Practice</button>
+		<button type="button" class="btn primary" onclick={() => startChallenge()}>Challenge</button>
 	</div>
 </div>
 

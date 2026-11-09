@@ -45,6 +45,8 @@ export function save() {
 /**
  * The puzzle and the run. phase: ready | play | wrong | solved | failed | revealed | over.
  * wrong: a shift that left clashes, awaiting Reset; failed: a challenge trick lost to the clock.
+ * paused: a saved game come back to, waiting for Resume (its board face down): { clock } (whether its clock was
+ * running), or false.
  */
 export const game = $state({
 	// counts the puzzles dealt: a new one pushes the old off the table
@@ -62,6 +64,7 @@ export const game = $state({
 	showClashes: false,
 	reviewing: false,
 	flash: '',
+	paused: false,
 	practice: { solved: 0, played: 0 },
 	run: { level: 1, tasks: 0, strikes: 0, score: 0, solved: 0, pendingLevel: false, newBest: false }
 });
@@ -75,7 +78,7 @@ export const pitch = (axis) => (axis === 'row' ? geo().p : geo().pY);
 export const laneLen = (axis) => (axis === 'row' ? game.C : game.R);
 export const levelSecs = () => levelInfo(game.run.level).secs;
 export const clashes = () => badPairs(game.grid, game.R, game.C, ok);
-export const canMove = () => game.phase === 'play' && !game.busy && (app.mode === 'practice' || game.running);
+export const canMove = () => game.phase === 'play' && !game.busy && !game.paused && (app.mode === 'practice' || game.running);
 
 const say = (text, tone = '') => {
 	game.msg = { text, tone };
@@ -138,15 +141,19 @@ function deal() {
 	game.grid = puzzle.slice();
 	game.solutions = solutions;
 	game.reviewing = false;
+	game.paused = false;
 	game.deal++;
 	clearLane();
 }
 
+/** To the game in Practice: the puzzle saved there, waiting for Resume, or else a new one. */
 export function startPractice() {
 	stopTimer();
 	app.mode = 'practice';
 	app.page = 'game';
-	newDeal();
+	const saved = loadGame();
+	if (saved?.tally) game.practice = saved.tally;
+	if (!restore(saved)) newDeal();
 }
 
 export function newDeal() {
@@ -158,10 +165,12 @@ export function newDeal() {
 	sfx.deal();
 }
 
+/** To the game in Challenge: the run saved there, waiting for Resume, or else a new one. */
 export function startChallenge() {
+	stopTimer();
 	app.mode = 'challenge';
 	app.page = 'game';
-	newRun();
+	if (!restore(loadGame())) newRun();
 }
 
 export function newRun() {
@@ -198,12 +207,72 @@ export function next() {
 	startPlay();
 }
 
+// ---------- saving the game, and coming back to it ----------
+
+// Each mode's game is saved under a key of its own as it goes (see the Game Page), on Back, and when the app is hidden,
+// so it can be come back to, after a restart too: the puzzle and where it stands, the clock's time used and whether it
+// was running, the rules it was dealt under, the shift Reset would undo, and the mode's tally (Practice) or run
+// (Challenge).
+const gameKey = () => `${APP_STATE} • ${app.mode}`;
+const TABLE = ['R', 'C', 'grid', 'puzzle', 'solutions', 'phase', 'msg', 'left', 'showClashes', 'reviewing'];
+
+/** Saves the game of the mode being played; `clock`, whether its clock is running (or was, before it paused). */
+export function saveGame(clock = running || !!game.paused?.clock) {
+	if (!game.puzzle.length) return;
+	const table = {};
+	for (const k of TABLE) table[k] = $state.snapshot(game[k]);
+	const tally = $state.snapshot(app.mode === 'practice' ? game.practice : game.run);
+	try {
+		localStorage.setItem(gameKey(), JSON.stringify({ rule: app.rule, table, tally, elapsed: elapsedMs(), clock, wrongMove }));
+	} catch {
+		// storage unavailable: the game lasts as long as the page
+	}
+}
+
+function loadGame() {
+	try {
+		return JSON.parse(localStorage.getItem(gameKey()));
+	} catch {
+		return null;
+	}
+}
+
+/** Puts a saved game back, if there's one to go back to: a puzzle under way in Practice (not solved or revealed), a run
+ *  not over in Challenge, either dealt under the rules now picked. It waits for Resume, its board face down and its
+ *  clock stopped, unless it's at an act's panel, which is a prompt of its own. Whether it did. */
+function restore(saved) {
+	const live = app.mode === 'practice' ? ['play', 'wrong'] : ['ready', 'play', 'wrong', 'solved', 'failed', 'revealed'];
+	if (!saved?.table || saved.rule !== app.rule || !live.includes(saved.table.phase)) return false;
+	clearLane();
+	Object.assign(game, saved.table, { busy: false, flash: '' });
+	if (app.mode === 'challenge') game.run = saved.tally;
+	elapsed = saved.elapsed;
+	wrongMove = saved.wrongMove;
+	game.paused = game.phase === 'ready' ? false : { clock: saved.clock };
+	return true;
+}
+
+/** Turns a game come back to face up, and its clock on from where it stopped. */
+export function resume() {
+	if (!game.paused) return;
+	const { clock } = game.paused;
+	game.paused = false;
+	sfx.deal();
+	if (clock) resumeTimer();
+}
+
 export function goHome() {
+	const clock = running || !!game.paused?.clock;
 	stopTimer();
+	saveGame(clock);
 	clearLane();
 	game.busy = false;
+	game.paused = false;
 	app.page = 'home';
 }
+
+// whether an animation that was started on this puzzle may still finish it: not once the player has left it
+const stillOn = (puzzle) => app.page === 'game' && game.puzzle === puzzle;
 
 function taskDone() {
 	const r = game.run;
@@ -306,7 +375,7 @@ export function reset() {
 	Object.assign(lane, { axis: m.axis, idx: m.idx, d: 0, steps: 0, answer: false });
 	tween(0, back * pitch(m.axis), RESET_SLIDE_MS, (v) => (lane.d = v), () => {
 		// left for Home, or dealt anew, meanwhile
-		if (game.puzzle !== puzzle || app.page !== 'game') {
+		if (!stillOn(puzzle)) {
 			game.busy = false;
 			return;
 		}
@@ -332,12 +401,15 @@ export function showAnswer() {
 	const m = game.solutions[0];
 	const n = laneLen(m.axis);
 	const steps = m.steps > n / 2 ? m.steps - n : m.steps;
-	game.grid = game.puzzle.slice();
+	const puzzle = game.puzzle;
+	game.grid = puzzle.slice();
 	game.busy = true;
 	setTimeout(
 		() => {
+			if (!stillOn(puzzle)) return;
 			Object.assign(lane, { axis: m.axis, idx: m.idx, d: 0, steps: 0, answer: true });
 			tween(0, steps * pitch(m.axis), 650, (v) => (lane.d = v), () => {
+				if (!stillOn(puzzle)) return;
 				clearLane();
 				game.grid = applyMove(game.grid, game.R, game.C, m);
 				game.busy = false;
@@ -366,8 +438,10 @@ export function settle() {
 	const { axis, idx, d } = lane;
 	const P = pitch(axis);
 	const steps = Math.round(d / P);
+	const puzzle = game.puzzle;
 	game.busy = true;
 	tween(d, steps * P, 140, (v) => (lane.d = v), () => {
+		if (!stillOn(puzzle)) return;
 		clearLane();
 		game.busy = false;
 		const s = mod(steps, laneLen(axis));
