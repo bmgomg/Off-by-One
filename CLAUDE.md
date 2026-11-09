@@ -27,7 +27,7 @@ playtest extras ("Start at level", rule and size switches in one place).
 - `src/utils.js`: `tween`, and `slideX` / `pushIn` / `pushOut`, the slide transitions.
 - `src/Splash.svelte`, `src/Home.svelte`, `src/Game Page.svelte`, `src/Board.svelte` (the cards, dragging with the wrap copy, keyboard, clash marks).
 - `src/sound.js`: synthesized effects. `src/cards.js`: the deck's images and names.
-- `src/lib/images/cards/`: the deck (52 webp faces with transparent backgrounds; the board paints the ivory face).
+- `src/lib/images/cards/`: the deck, 52 SVG faces from Race the Ace's `svg` branch (transparent backgrounds; the board paints the ivory face).
   `src/lib/images/BMG.webp`: the splash's logo, the template's.
 - `src/lib/fonts/`: Limelight (`LM`, titles), Cormorant Garamond (`CG`, text), Cormorant SC (`CSC`, labels), latin subsets, with their OFL texts.
 
