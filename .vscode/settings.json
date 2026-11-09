@@ -1,0 +1,8 @@
+{
+	// A build rewrites thousands of files in these two folders; watched, that flood delayed VS Code's view of real
+	// changes (Source Control showed edits only after a while). Both are generated and git-ignored.
+	"files.watcherExclude": {
+		"**/.svelte-kit/**": true,
+		"**/build/**": true
+	}
+}
