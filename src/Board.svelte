@@ -1,5 +1,7 @@
 <script>
+	import { cubicIn, cubicOut } from 'svelte/easing';
 	import { cardImage, cardName } from './cards';
+	import { FLIP_MS, FLIP_WAVE_MS } from './const';
 	import { mod } from './logic';
 	import { sfx } from './sound';
 	import {
@@ -16,8 +18,24 @@
 		pitch,
 		settle
 	} from './shared.svelte';
+	import { reducedMotion } from './utils';
 
 	let boardEl = $state();
+
+	// Face-down cards turning up (Curtain up, Continue, Resume) flip: the back narrows to its edge, then the face opens
+	// out from it. The squash goes after the card's place in its transform, so it's about the card's own middle (the
+	// `scale` property would come first, and squash its place too). They go in a wave from the top-left corner, a card's
+	// turn by its row plus column.
+	const wave = (i) => (Math.floor(i / game.C) + (i % game.C)) * FLIP_WAVE_MS;
+	const half = () => (reducedMotion() ? 0 : FLIP_MS / 2);
+	const squash = ({ x, y }) => (s) => `transform: translate(${x}px, ${y}px) scaleX(${s})`;
+	const fold = (node, t) => ({ delay: reducedMotion() ? 0 : wave(t.i), duration: half(), easing: cubicIn, css: squash(t) });
+	const unfold = (node, t) => ({
+		delay: reducedMotion() ? 0 : wave(t.i) + half(),
+		duration: half(),
+		easing: cubicOut,
+		css: squash(t)
+	});
 	let cursor = $state([0, 0]);
 	let drag = null;
 
@@ -166,9 +184,10 @@
 
 	{#each tiles as t (t.code)}
 		{#if veiled}
-			<div class="card back" style="transform: translate({t.x}px, {t.y}px)"></div>
+			<div class="card back" style="transform: translate({t.x}px, {t.y}px)" out:fold={t}></div>
 		{:else}
 			<img
+				in:unfold={t}
 				class="card"
 				class:moving={t.moving}
 				class:bad={badCells.has(t.i)}

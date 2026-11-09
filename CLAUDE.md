@@ -41,6 +41,11 @@ felt stays, easing to a new board size meanwhile); the old cards, on their way o
 final-curtain panels slide in from the right and out to the left, and so does the message under the
 board with its buttons, a new one pushing the old out (`STRIP_SLIDE_MS`, 0.4 s). With reduced motion they're instant.
 
+Face-down cards turn up with a flip (Curtain up, Continue, Resume): each back narrows to its edge and the face opens out
+from it (`FLIP_MS`, 0.36 s for the two halves), in a wave from the top-left corner, each diagonal `FLIP_WAVE_MS` (40 ms)
+after the one before. The squash is put after the card's translate in its transform, since the `scale` property would
+apply first and squash the card's place on the board too.
+
 The numbers that change in place roll, by NumberFlow (`@number-flow/svelte`): the act, trick, applause, the clock's
 seconds, and Practice's solved / played. Its digits are padded above and below for the roll's fade; `.val` and `.secs`
 hold them to the text's height, so the padding overflows and the board's room (`BOARD_H`) is unchanged.

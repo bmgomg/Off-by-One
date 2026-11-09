@@ -15,6 +15,10 @@ export const PAGE_SLIDE_MS = 500;
 // A new puzzle pushes the old off the table, and the act and final-curtain panels and the message and buttons under the
 // board change by a push too, all in this long: the page stays, so it's quicker.
 export const STRIP_SLIDE_MS = 400;
+// Face-down cards turn up with a flip, each in this long (half to fold the back to its edge, half to open the face),
+// in a wave from the top-left corner, each diagonal this much after the one before
+export const FLIP_MS = 360;
+export const FLIP_WAVE_MS = 40;
 // Reset slides the wrongly shifted lane back where it was dealt, in this long
 export const RESET_SLIDE_MS = 400;
 
