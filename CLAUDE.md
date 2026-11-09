@@ -69,7 +69,7 @@ Five puzzles per level, three strikes end the run, and strikes reset each level.
 running out of time is a strike. A wrong shift stops the clock and shows one button, Reset: the lane slides back as dealt, the shortest way
 (`RESET_SLIDE_MS`, 0.4 s),
 and the clock runs on from where it stopped, so the trick can still be solved (the designer's call). Running out of time
-ends the trick, showing a fix, with Next trick and Reveal. Each solve scores **seconds left × level**.
+ends the trick, showing a fix, with Next trick and Reveal. Each solve scores **seconds left × level** (the act panel: "You score the seconds left on the clock, times the act number.").
 
 | Level | Board | Seconds per puzzle |
 |---|---|---|
@@ -87,13 +87,18 @@ in `src/const.js`. In the app's theme a level is an "act", a puzzle a "trick", t
 Practice has no timer and a board-size choice, and lets you mark clashes. A wrong shift shows the same single Reset;
 there's no Reveal in Practice any more.
 
+## Toolbar
+
+Back, New Deal (Practice), SFX On/Off, Music On/Off, Stats (Challenge; for the stats card, still to come). Each label
+is on one line, and a toggle's word keeps the room of the longer of On and Off, so nothing moves when one changes.
+
 ## Music
 
 Race the Ace's track (`src/lib/sounds/music.mp3`), played by howler and managed as in Dark Matter (`src/sound.js`): the
 loop starts on the first Practice or Challenge (a tap, which browsers require before sound), then keeps playing with
 only its volume changing. It fades up from silence over `MUSIC_FADE_MS` (5 s) to `MUSIC_VOLUME` (0.4) whenever it starts
 or comes back (Music On, back in the window), and goes quiet at once (Music Off, out of the window). Music On/Off is in
-the toolbar and saved with the settings. The effects stay synthesized (`sfx`), with their own Sound On/Off.
+the toolbar and saved with the settings. The effects stay synthesized (`sfx`), with their own SFX On/Off.
 
 The track's source and licence aren't on record: Race the Ace names none, and Dark Matter's notes say the same of the
 BMG games' shared tracks. Settle that, and any credit it requires, before release.
@@ -104,8 +109,8 @@ Each mode's game is saved in localStorage (`APP_STATE • practice`, `APP_STATE 
 the clock, on Back, and when the app is hidden: the puzzle and where it stands, the clock's time used and whether it was
 running, the rules it was dealt under, the shift Reset would undo, and Practice's tally or the run. Going to a mode
 again, after a restart too, brings its game back face down under a panel, "Puzzle in progress" or "Show in progress",
-with Resume, as in Race the Ace: it doesn't resume by itself (the designer's call), and the clock waits for Resume. New
-Deal or New Show starts afresh instead. A solved or revealed practice puzzle, a run that's over, or a game dealt under
+with Resume, as in Race the Ace: it doesn't resume by itself (the designer's call), and the clock waits for Resume. In Practice,
+New Deal starts afresh instead; a run in Challenge can only be resumed (New Show went, the designer's call). A solved or revealed practice puzzle, a run that's over, or a game dealt under
 the other rules isn't brought back; a run waiting at an act's panel comes back to that panel, which is a prompt already.
 
 ## Design notes

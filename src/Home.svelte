@@ -153,7 +153,9 @@
 		transform: rotate(45deg);
 	}
 
+	/* no word alone on a rule's last line */
 	.rules {
+		text-wrap: pretty;
 		list-style: none;
 		margin: 0;
 		padding: 0;

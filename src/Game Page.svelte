@@ -52,10 +52,10 @@
 		const info = levelInfo(L);
 		const prev = levelInfo(Math.max(1, L - 1));
 		const size = info.size.replace('x', '×');
-		if (run.tasks === 0) return { lines: [`The board: ${size}, ${info.secs} seconds per trick.`, 'A wrong shift or running out of time earns a strike. Three strikes end the show.', 'Each solve scores seconds left × level.'], button: 'Curtain up' };
+		if (run.tasks === 0) return { lines: [`The board: ${size}, ${info.secs} seconds per trick.`, 'A wrong shift or running out of time earns a strike. Three strikes end the show.', 'You score the seconds left on the clock, times the act number.'], button: 'Curtain up' };
 		const lines = ['Your strikes have been reset.'];
 		if (prev.size !== info.size) lines.unshift(`The board grows to ${size}.`);
-		if (prev.secs !== info.secs) lines.push(`You now have ${info.secs} seconds per trick.`);
+		if (prev.secs !== info.secs) lines.push(`You now have ${info.secs} seconds per trick.`);
 		return { lines, button: 'Continue' };
 	});
 </script>
@@ -178,17 +178,25 @@
 		{/key}
 	</div>
 
+	<!-- every label on one line, and the toggles as wide either way, so nothing moves when one changes -->
 	<nav class="toolbar">
 		<button type="button" onclick={goHome}>Back</button>
-		{#if challenge}
-			<button type="button" onclick={newRun}>New Show</button>
-		{:else}
+		{#if !challenge}
 			<button type="button" onclick={newDeal}>New Deal</button>
 		{/if}
-		<button type="button" onclick={toggleSound}>Sound {app.sound ? 'On' : 'Off'}</button>
-		<button type="button" onclick={toggleMusic}>Music {app.music ? 'On' : 'Off'}</button>
+		<button type="button" onclick={toggleSound}>SFX {@render state(app.sound)}</button>
+		<button type="button" onclick={toggleMusic}>Music {@render state(app.music)}</button>
+		{#if challenge}
+			<!-- for the stats card, still to come -->
+			<button type="button">Stats</button>
+		{/if}
 	</nav>
 </div>
+
+<!-- On and Off in one place, the one not in force hidden, so the word takes the room of the longer either way -->
+{#snippet state(on)}
+	<span class="state"><span class:unset={!on}>On</span><span class:unset={on}>Off</span></span>
+{/snippet}
 
 <style>
 	.game {
@@ -531,7 +539,7 @@
 	.panel {
 		width: 300px;
 		box-sizing: border-box;
-		padding: 22px 24px;
+		padding: 32px 26px 30px;
 		background: var(--velvet);
 		border: 1px solid var(--gold);
 		outline: 1px solid rgba(216, 180, 100, 0.35);
@@ -540,8 +548,14 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 14px;
+		gap: 20px;
 		text-align: center;
+	}
+
+	/* a little more room above a panel's buttons than between its lines */
+	.panel > .btn,
+	.panel > .row {
+		margin-top: 8px;
 	}
 
 	.panel h2 {
@@ -552,13 +566,20 @@
 		color: var(--gold-hi);
 	}
 
+	/* centred text never leaves a word alone on a line: the lines are balanced */
+	.panel ul,
+	.panel p,
+	.msg {
+		text-wrap: balance;
+	}
+
 	.panel ul {
 		margin: 0;
 		padding: 0;
 		list-style: none;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 14px;
 		font-size: 19px;
 		line-height: 1.3;
 		color: var(--cream);
@@ -669,20 +690,36 @@
 
 	.toolbar button {
 		min-height: 42px;
-		padding: 0 8px;
+		padding: 0 4px;
 		background: none;
 		border: 0;
 		color: #d9c79e;
 		font-family: var(--caps);
 		font-weight: 600;
-		font-size: 17px;
-		letter-spacing: 2px;
+		/* five labels on one line in the toolbar's 406 px (323 px of words at this size) */
+		font-size: 16px;
+		letter-spacing: 1.5px;
+		white-space: nowrap;
 		cursor: pointer;
 		/* a tap presses it in, and it springs back out past its size, as the size pills do */
 		transition:
 			color 0.2s,
 			text-shadow 0.2s,
 			transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+	}
+
+	.state {
+		display: inline-grid;
+	}
+
+	/* left, so the word follows its label by a plain space, the spare room after it */
+	.state > span {
+		grid-area: 1/1;
+		text-align: left;
+	}
+
+	.state > .unset {
+		visibility: hidden;
 	}
 
 	.toolbar button:active {
