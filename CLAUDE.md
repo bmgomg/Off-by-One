@@ -37,7 +37,8 @@ The template's BMG splash, as in Dark Matter: a tap on it wipes this game's save
 off to the left as the page slides in from the right (`SPLASH_SLIDE_MS`, 0.7 s, ease-in-out). Home and the game stand in a
 row, so Play pushes Home off to the left and Back brings it back from there (`PAGE_SLIDE_MS`, 0.5 s); the gold frame holds
 still. A new puzzle (New Deal, Next trick, a board size, Encore) pushes the old one's cards off the felt to the left (the
-felt stays, easing to a new board size meanwhile); the old cards, on their way out, keep their own faces, since Svelte stops updating an outgoing block (`game.deal` keys it). The act and
+felt stays, easing to a new board size meanwhile; each puzzle's cards lie over the whole felt on their own, centred,
+so two boards of different sizes don't share a layout); the old cards, on their way out, keep their own faces, since Svelte stops updating an outgoing block (`game.deal` keys it). The act and
 final-curtain panels slide in from the right and out to the left, and so does the message under the
 board with its buttons, a new one pushing the old out (`STRIP_SLIDE_MS`, 0.4 s). With reduced motion they're instant.
 
