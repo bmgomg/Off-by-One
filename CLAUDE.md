@@ -164,11 +164,12 @@ usual place on Windows). Each GIF is about 1 MB, under itch's 3 MB.
 - `scripts/tile.html`, the page's background, a seamless tile, 1024 × 1024: a stage curtain in the game's velvet. Its
   folds are waves a whole number of times across the tile, its nap noise that wraps, and it doesn't change from top to
   bottom.
-- `scripts/rules-2.html`, the rules graphic for the page's description, 450 × 400 rendered at twice that, in the format of
-  Dark Matter's rules-2: Home's rules styled as there, then that aces are high and the challenge's score and strikes.
-  Change it with Home's wording and the game's.
-
-Not yet made: a logo (Dark Matter has one).
+- `scripts/rules-2.html`, the rules graphic for the page's description, 450 × 320 rendered at twice that, in the format of
+  Dark Matter's rules-2: Home's rules styled as there, with that aces are high (the score and strikes were dropped, the
+  designer's call). Change it with Home's wording.
+- `scripts/logo.html`, the logo, 1000 × 300 on transparency: the icon's heart and spade as two cards of a row, the spade
+  slid off its dashed frame and lifted with its gold ring, beside the title. Gold letters and ivory cards on dark
+  outlines, as itch wants it legible on white and black.
 
 ## Design notes
 

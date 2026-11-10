@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <title>Rules</title>
 <!-- The rules graphic for the itch.io page, in the format of Dark Matter's rules-2: Home's rules (src/Home.svelte, its
-     third RULE_TEXT in src/logic.js) styled as there, with its gold diamonds, on the game's velvet, with the challenge's
-     score and strikes after them (points in src/logic.js, MAX_STRIKES in src/const.js) and that aces are high. 450 × 400,
-     rendered by render-cover.sh at twice that. Change the wording with Home's and the game's. -->
+     third RULE_TEXT in src/logic.js) styled as there, with its gold diamonds, on the game's velvet, and that aces are
+     high. 450 × 320, rendered by render-cover.sh at twice that. Change the wording with Home's. -->
 <style>
 	@font-face {
 		font-family: CG;
@@ -26,7 +25,7 @@
 		position: relative;
 		box-sizing: border-box;
 		width: 450px;
-		height: 400px;
+		height: 320px;
 		display: grid;
 		place-content: center;
 		overflow: hidden;
@@ -92,7 +91,6 @@
 		<li><span>Slide it back. Cards that leave one end <em>come round</em> at the other.</span></li>
 		<li><span>Touching cards must differ in rank by <em>at least two</em>. Aces are high.</span></li>
 		<li><span>Fix it in <em>one shift</em>. Beat the clock.</span></li>
-		<li><span>Each trick scores the <em>seconds left</em>, times the act. A wrong shift or running out of time is a strike; <em>three</em>, and the curtain falls.</span></li>
 	</ul>
 </div>
 </body>

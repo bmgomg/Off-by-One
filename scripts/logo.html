@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Logo</title>
+<!-- The itch.io logo, 1000 × 300, on transparency, rendered by render-cover.sh: two cards of a row beside the title, the
+     right one slid off its dashed frame, lifted with its gold ring, as the board draws a move (the icon's heart and
+     spade, from the deck; 14 and 12, so they may touch). Itch asks for it to be legible on both white and black: the
+     letters are the title's gold, and the cards ivory, each on a dark outline. -->
+<style>
+	@font-face {
+		font-family: LM;
+		src: url('../src/lib/fonts/Limelight.woff2');
+	}
+
+	html,
+	body {
+		margin: 0;
+		background: none;
+	}
+
+	svg {
+		display: block;
+	}
+
+	text {
+		font-family: LM;
+		fill: #e6c677;
+		stroke: #2b0b13;
+		stroke-width: 10;
+		stroke-linejoin: round;
+		paint-order: stroke fill;
+	}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" width="1000" height="300">
+	<defs>
+		<clipPath id="face">
+			<rect width="144" height="200" rx="14" />
+		</clipPath>
+		<g id="outline">
+			<rect x="-4" y="-4" width="152" height="208" rx="17" fill="#2b0b13" />
+		</g>
+	</defs>
+
+	<!-- the heart, in its place -->
+	<g transform="translate(24 50)">
+		<use href="#outline" />
+		<rect width="144" height="200" rx="14" fill="#fffaf0" />
+		<image href="../src/lib/images/cards/HA.svg" width="144" height="200" clip-path="url(#face)" />
+	</g>
+
+	<!-- the spade, slid off it, lifted (4%) with its gold ring -->
+	<g transform="translate(246 46) scale(1.04)">
+		<rect x="-10" y="-10" width="164" height="220" rx="22" fill="#2b0b13" />
+		<rect x="-6" y="-6" width="156" height="212" rx="19" fill="#d8b464" />
+		<use href="#outline" />
+		<rect width="144" height="200" rx="14" fill="#fffaf0" />
+		<image href="../src/lib/images/cards/SQ.svg" width="144" height="200" clip-path="url(#face)" />
+	</g>
+
+	<!-- where the spade started: the board's dashed frame, over the cards as there, gold on a dark line -->
+	<g transform="translate(178 50)" fill="none">
+		<rect width="144" height="200" rx="14" stroke="#2b0b13" stroke-width="7" stroke-dasharray="14 10" />
+		<rect width="144" height="200" rx="14" stroke="#e6c677" stroke-width="3.5" stroke-dasharray="14 10" />
+	</g>
+
+	<text x="432" y="184" font-size="104">Off <tspan font-size="69" dy="13">by</tspan> <tspan dy="-13">One</tspan></text>
+</svg>
+</body>
+</html>
