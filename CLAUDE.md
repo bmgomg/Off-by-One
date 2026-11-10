@@ -147,19 +147,28 @@ the other rules isn't brought back; a run waiting at an act's panel comes back t
 
 ## itch.io art
 
-`sh scripts/render-cover.sh` writes the stills to `itch/`, as Dark Matter's does, with headless Edge or Chrome:
+`sh scripts/render-cover.sh` writes the stills to `itch/`, as Dark Matter's does, with headless Edge or Chrome;
+`node scripts/render-cover-gif.mjs [cover|embed|wide]` writes `itch/cover.gif`, `itch/embed-bg.gif` or
+`itch/wide-cover.gif` (Chrome over the DevTools protocol, and ffmpeg; `CHROME` and `CHROME_FLAGS` if Chrome isn't in its
+usual place on Windows). Each GIF is about 1 MB, under itch's 3 MB.
 
-- `scripts/cover.html`, the cover, 630 × 500: the title over the felt, caught mid-trick. The middle row is half a card
-  from home, its King leaving at the right and coming round at the left, the card it was taken by lifted with its gold
-  ring over the dashed frame of where it started, as the board draws a move. The board is valid once the row is home,
-  so the picture plays fair: change the cards with the rule.
+- `scripts/cover.html`: the felt caught mid-trick. A row is half a card from home, the card leaving at the right coming
+  round at the left, the card it was taken by lifted with its gold ring over the dashed frame of where it started, as
+  the board draws a move. The 3-row board is valid once the row is home, so the picture plays fair: change the cards
+  with the rule. Animated (`window.frame`, a 5 s loop starting on the still), the row goes home, the felt glows as on a
+  win, the next deal pushes the cards off to the left, and the same board comes in slipped and is taken up again.
+  Layouts: the cover, 630 × 500, the title over the board; `#embed`, the Embed BG, 640 × 360, the title above itch's Run
+  Game button and a single row of cards below it, clear velvet between; `#wide`, the Wide Cover, 840 × 360, no title
+  (itch puts its own over promo modules), the board right of centre; `#social`, the social media image, 1200 × 630, the
+  title on the left and the board on the right.
 - `scripts/tile.html`, the page's background, a seamless tile, 1024 × 1024: a stage curtain in the game's velvet. Its
   folds are waves a whole number of times across the tile, its nap noise that wraps, and it doesn't change from top to
   bottom.
-- `scripts/rules.html`, the rules graphic for the page's description, 900 × 600, in the format of Dark Matter's: its
-  wording states the rule, the score and the three strikes, so change it with the game.
+- `scripts/rules-2.html`, the rules graphic for the page's description, 450 × 400 rendered at twice that, in the format of
+  Dark Matter's rules-2: Home's rules styled as there, then that aces are high and the challenge's score and strikes.
+  Change it with Home's wording and the game's.
 
-Not yet made: the Embed BG, the social media image and a logo (Dark Matter has all three).
+Not yet made: a logo (Dark Matter has one).
 
 ## Design notes
 

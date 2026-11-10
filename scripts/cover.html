@@ -3,10 +3,19 @@
 <head>
 <meta charset="utf-8">
 <title>Cover</title>
-<!-- The itch.io cover, 630 × 500, rendered by render-cover.sh: the title over the felt, caught mid-trick. The middle row
-     is on its way back, half a card along: its King, leaving at the right, comes round at the left (the wrap copy, as
-     the board draws it), and the card it was taken by is lifted with its gold ring over the dashed frame of where it
-     started. The board is valid once the row is home (the rank gap, ok in logic.js), so the picture plays fair. -->
+<!-- The itch.io art, rendered by render-cover.sh (stills) and render-cover-gif.mjs (GIFs): the felt caught mid-trick.
+     A row is on its way back, half a card along: the card leaving at the right comes round at the left (the wrap copy,
+     as the board draws it), and the card it was taken by is lifted with its gold ring over the dashed frame of where it
+     started. The 3-row board is valid once the row is home (the rank gap, ok in logic.js), so the picture plays fair.
+     Animated (window.frame), the row goes home, the felt glows as on a win, the next deal pushes the cards off to the
+     left, and the same board comes in slipped and is taken up again, back to the first frame. Layouts:
+     (no hash)  the cover, 630 × 500, the title over the board
+     #embed     the Embed BG, 640 × 360: itch puts its Run Game button in the middle, so the title is above it and a
+                single row of cards below it, with clear velvet between
+     #wide      the Wide Cover, 840 × 360 (21:9), for itch's home page features: no title, which itch puts over its promo
+                modules itself; the board right of centre, as in Dark Matter's
+     #social    the social media image, 1200 × 630: the title on the left, the board on the right, since a link preview
+                has no overlay -->
 <style>
 	@font-face {
 		font-family: LM;
@@ -35,17 +44,37 @@
 		background: radial-gradient(ellipse at 30% 0%, #5a1626 0%, #2b0b13 58%, #17050a 100%);
 	}
 
+	.embed.cover {
+		width: 640px;
+		height: 360px;
+	}
+
+	.wide.cover {
+		width: 840px;
+		height: 360px;
+	}
+
+	.social.cover {
+		width: 1200px;
+		height: 630px;
+	}
+
 	/* a spotlight on the felt, as on a stage */
-	.cover::before {
-		content: '';
+	.spot {
 		position: absolute;
 		inset: 0;
-		background: radial-gradient(ellipse 46% 50% at 50% 66%, rgba(255, 214, 150, 0.1), transparent 70%);
+		background: radial-gradient(ellipse var(--spot), rgba(255, 214, 150, 0.1), transparent 70%);
+	}
+
+	/* a fixed grain, against the bands a GIF's few colours make of the velvet: still, so it costs next to nothing */
+	canvas {
+		position: absolute;
+		inset: 0;
 	}
 
 	.border {
 		position: absolute;
-		z-index: 2;
+		z-index: 3;
 		border: 1px solid rgba(216, 180, 100, 0.6);
 	}
 
@@ -83,8 +112,8 @@
 	/* off by a little, as on Home */
 	.by {
 		display: inline-block;
-		font-size: 50px;
-		transform: translateY(10px);
+		font-size: 0.66em;
+		transform: translateY(0.13em);
 	}
 
 	.tagline {
@@ -95,14 +124,48 @@
 		color: #d8b464;
 	}
 
+	.embed .titles {
+		top: 22px;
+		gap: 2px;
+	}
+
+	.embed h1 {
+		font-size: 52px;
+	}
+
+	.embed .tagline {
+		font-size: 21px;
+	}
+
+	.wide .titles {
+		display: none;
+	}
+
+	.social .titles {
+		top: 0;
+		bottom: 0;
+		right: auto;
+		width: 580px;
+		align-content: center;
+		gap: 14px;
+	}
+
+	.social h1 {
+		font-size: 104px;
+	}
+
+	.social .tagline {
+		font-size: 38px;
+	}
+
 	/* the felt, as the game's (#120609, one gold line, a little rounded), its cards clipped by it */
 	.felt {
 		position: absolute;
+		z-index: 1;
 		overflow: hidden;
 		background: #120609;
 		border: 1px solid #d8b464;
 		border-radius: 9px;
-		box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6);
 	}
 
 	.card,
@@ -114,7 +177,6 @@
 	.card {
 		border-radius: 7px;
 		background: #fffaf0;
-		box-shadow: 0 3px 6px rgba(0, 0, 0, 0.55);
 	}
 
 	.card img {
@@ -123,31 +185,24 @@
 		height: 100%;
 	}
 
-	/* the moving lane, and its anchor lifted (the board's LIFT, 4%), above its neighbours */
-	.card.moving {
-		box-shadow:
-			0 0 16px rgba(216, 180, 100, 0.45),
-			0 10px 18px rgba(0, 0, 0, 0.7);
-	}
-
-	.card.anchor {
-		z-index: 1;
-		transform: scale(1.04);
-		box-shadow:
-			0 0 0 3px #d8b464,
-			0 0 18px 4px rgba(216, 180, 100, 0.5),
-			0 12px 22px rgba(0, 0, 0, 0.75);
-	}
-
 	.home-frame {
 		z-index: 2;
 		border: 2px dashed rgba(230, 198, 119, 0.75);
 		border-radius: 7px;
 	}
+
+	/* back in it: the board's .home-frame.home */
+	.home-frame.home {
+		border-style: solid;
+		border-color: #f3dc9c;
+		box-shadow: 0 0 14px rgba(243, 220, 156, 0.7);
+	}
 </style>
 </head>
 <body>
-<div class="cover">
+<div class="cover" id="cover">
+	<div class="spot"></div>
+	<canvas id="grain"></canvas>
 	<div class="border outer"></div>
 	<div class="border inner"></div>
 	<div class="titles">
@@ -157,59 +212,177 @@
 	<div class="felt" id="felt"></div>
 </div>
 <script>
-	// the board once solved, rows from the top: each card as its file in src/lib/images/cards
-	const SOLVED = [
-		['SA', 'H9', 'CQ', 'D4', 'S7'],
-		['DJ', 'C6', 'H2', 'S10', 'HK'],
-		['C8', 'HQ', 'S5', 'D7', 'C3']
-	];
-	// the row that slipped, one to the right, and how far back it is: half a card to go
-	const ROW = 1;
-	const ALONG = 0.5;
-	// the card it was taken by, in the solved row, and so its frame one place to the right, where it started
-	const ANCHOR = 2;
+	// the board once solved, rows from the top: each card as its file in src/lib/images/cards; the row that slipped,
+	// one to the right; and the card it was taken by, in the solved row, so its frame is one place to the right
+	const BOARD = {
+		cards: [
+			['SA', 'H9', 'CQ', 'D4', 'S7'],
+			['DJ', 'C6', 'H2', 'S10', 'HK'],
+			['C8', 'HQ', 'S5', 'D7', 'C3']
+		],
+		row: 1,
+		anchor: 2
+	};
+	// the Embed BG's: one row, under the button
+	const ROW = { cards: [['C3', 'H8', 'SK', 'D5', 'C10', 'HA', 'S6']], row: 0, anchor: 3 };
+
+	// W, H: the picture; CW: a card's width; FX, FY: the felt's centre; SPOT: the spotlight's ellipse
+	const LAYOUTS = {
+		cover: { W: 630, H: 500, CW: 70, FX: 315, FY: 308, SPOT: '46% 50% at 50% 66%', ...BOARD },
+		embed: { W: 640, H: 360, CW: 70, FX: 320, FY: 280, SPOT: '50% 40% at 50% 78%', ...ROW },
+		wide: { W: 840, H: 360, CW: 64, FX: 530, FY: 180, SPOT: '36% 60% at 63% 50%', ...BOARD },
+		social: { W: 1200, H: 630, CW: 100, FX: 880, FY: 315, SPOT: '36% 60% at 72% 50%', ...BOARD }
+	};
+	const NAME = location.hash.slice(1) || 'cover';
+	const { W, H, CW, FX, FY, SPOT, cards, row: ROW_SLIPPED, anchor: ANCHOR } = LAYOUTS[NAME];
+
+	const cover = document.getElementById('cover');
+	cover.classList.add(NAME);
+	cover.style.setProperty('--spot', SPOT);
 
 	// the cards and the gap between them, a share of the pitch, as the game's CARD_RATIO and CARD_GAP
-	const CW = 70;
 	const CH = Math.round(CW / 0.72);
 	const GAP = Math.round((CW * 0.07) / 0.93);
-	const PAD = 6;
-	const COLS = SOLVED[0].length;
-	const ROWS = SOLVED.length;
+	const PAD = Math.round(CW / 12);
+	const RADIUS = Math.round(CW / 10);
+	const COLS = cards[0].length;
+	const ROWS = cards.length;
 	const PX = CW + GAP;
 	const PY = CH + GAP;
-	const W = COLS * PX - GAP + 2 * PAD;
-	const H = ROWS * PY - GAP + 2 * PAD;
-	const TOP = 152;
+	const FW = COLS * PX - GAP + 2 * PAD;
+	const FH = ROWS * PY - GAP + 2 * PAD;
 
 	const felt = document.getElementById('felt');
-	Object.assign(felt.style, { width: `${W}px`, height: `${H}px`, left: `${(630 - W) / 2 - 1}px`, top: `${TOP}px` });
-
-	const place = (el, col, row) => {
-		Object.assign(el.style, { left: `${PAD + col * PX}px`, top: `${PAD + row * PY}px`, width: `${CW}px`, height: `${CH}px` });
-		felt.appendChild(el);
-	};
-
-	const card = (file, col, row, ...classes) => {
-		const el = document.createElement('div');
-		el.className = ['card', ...classes].join(' ');
-		el.innerHTML = `<img src="../src/lib/images/cards/${file}.svg" alt="">`;
-		place(el, col, row);
-	};
-
-	SOLVED.forEach((cards, r) => {
-		if (r !== ROW) cards.forEach((file, c) => card(file, c, r));
+	Object.assign(felt.style, {
+		width: `${FW}px`,
+		height: `${FH}px`,
+		left: `${Math.round(FX - FW / 2 - 1)}px`,
+		top: `${Math.round(FY - FH / 2 - 1)}px`,
+		borderRadius: `${RADIUS + 2}px`
 	});
 
-	const frame = document.createElement('div');
-	frame.className = 'home-frame';
-	place(frame, ANCHOR + 1, ROW);
+	const rand = (() => {
+		let a = 20261110;
+		return () => {
+			a = (a + 0x6d2b79f5) | 0;
+			let t = Math.imul(a ^ (a >>> 15), 1 | a);
+			t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+			return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+		};
+	})();
 
-	SOLVED[ROW].forEach((file, c) => {
-		card(file, c + ALONG, ROW, 'moving', c === ANCHOR ? 'anchor' : '');
+	const GRAIN = 7;
+	const grain = document.getElementById('grain');
+	grain.width = W;
+	grain.height = H;
+	const grainContext = grain.getContext('2d');
+	const noise = grainContext.createImageData(W, H);
 
-		// the last card, leaving at the right, comes round at the left too
-		if (c === COLS - 1) card(file, ALONG - 1, ROW, 'moving');
+	for (let i = 0; i < noise.data.length; i += 4) {
+		noise.data.fill(rand() < 0.5 ? 0 : 255, i, i + 3);
+		noise.data[i + 3] = rand() * GRAIN;
+	}
+
+	grainContext.putImageData(noise, 0, 0);
+
+	const clamp = (t) => Math.min(1, Math.max(0, t));
+	const span = (t, from, to) => clamp((t - from) / (to - from));
+	const easeOut = (t) => 1 - (1 - t) ** 3;
+	const easeInOut = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+	const mod = (a, n) => ((a % n) + n) % n;
+
+	// the loop, in seconds: the still, the row going home, the felt's glow, the next deal, and the row taken up again
+	const LOOP = 5;
+	const HOLD = 1.5;
+	const HOME = [HOLD, 2.1];
+	const DROP = [2.1, 2.35];
+	const DEAL = [3.4, 3.9];
+	const GLOW_OFF = [3.4, 3.7];
+	const TAKE = [4.1, 4.3];
+	const DRAG = [4.3, LOOP];
+	// how far the dragged row is from home, in cards, in the still
+	const ALONG = 0.5;
+	// the anchor counts as back in its frame within this much of a pitch, as in the board
+	const NEAR = 0.15;
+
+	const cardEl = (file, x, y) => {
+		const el = document.createElement('div');
+		el.className = 'card';
+		el.innerHTML = `<img src="../src/lib/images/cards/${file}.svg" alt="">`;
+		Object.assign(el.style, { left: `${x}px`, top: `${y}px`, width: `${CW}px`, height: `${CH}px`, borderRadius: `${RADIUS}px` });
+		felt.appendChild(el);
+		return el;
+	};
+
+	const shadow = (lift) => `0 ${3 + 7 * lift}px ${6 + 12 * lift}px rgba(0, 0, 0, ${0.55 + 0.15 * lift})`;
+
+	// one board, dx to the right, its row off home by `off` cards (1: as dealt), lifted by `lift`, 0 to 1
+	const drawBoard = (dx, off, lift) => {
+		const at = (col, r) => [dx + PAD + col * PX, PAD + r * PY];
+
+		cards.forEach((files, r) => {
+			if (r !== ROW_SLIPPED) {
+				files.forEach((file, c) => cardEl(file, ...at(c, r)).style.setProperty('box-shadow', shadow(0)));
+				return;
+			}
+
+			files.forEach((file, c) => {
+				const col = mod(c + off, COLS);
+				// a card past the right end shows at the left too
+				const cols = col > COLS - 1 ? [col, col - COLS] : [col];
+
+				for (const x of cols) {
+					const el = cardEl(file, ...at(x, r));
+
+					if (c === ANCHOR) {
+						el.style.zIndex = 1;
+						el.style.transform = `scale(${1 + 0.04 * lift})`;
+						el.style.boxShadow = `0 0 0 3px rgba(216, 180, 100, ${lift}), 0 0 18px 4px rgba(216, 180, 100, ${0.5 * lift}), ${shadow(1.3 * lift)}`;
+					} else {
+						el.style.boxShadow = `0 0 16px rgba(216, 180, 100, ${0.45 * lift}), ${shadow(lift)}`;
+					}
+				}
+			});
+		});
+
+		if (lift > 0) {
+			const frame = document.createElement('div');
+			frame.className = 'home-frame';
+			frame.classList.toggle('home', Math.abs(off - 1) < NEAR);
+			const [x, y] = at(ANCHOR + 1, ROW_SLIPPED);
+			Object.assign(frame.style, { left: `${x}px`, top: `${y}px`, width: `${CW}px`, height: `${CH}px`, borderRadius: `${RADIUS}px`, opacity: lift });
+			felt.appendChild(frame);
+		}
+	};
+
+	// t: seconds into the loop
+	const frame = (t) => {
+		felt.innerHTML = '';
+
+		const glow = span(t, ...DROP) * (1 - span(t, ...GLOW_OFF));
+		felt.style.borderColor = glow ? `color-mix(in srgb, #f3dc9c ${100 * glow}%, #d8b464)` : '#d8b464';
+		felt.style.boxShadow = `0 0 34px rgba(243, 220, 156, ${0.45 * glow}), 0 18px 36px rgba(0, 0, 0, 0.6)`;
+
+		if (t < DEAL[0]) {
+			drawBoard(0, ALONG * (1 - easeOut(span(t, ...HOME))), 1 - span(t, ...DROP));
+		} else if (t < DEAL[1]) {
+			const push = easeInOut(span(t, ...DEAL)) * FW;
+			drawBoard(-push, 0, 0);
+			drawBoard(FW - push, 1, 0);
+		} else {
+			drawBoard(0, 1 - ALONG * easeInOut(span(t, ...DRAG)), span(t, ...TAKE));
+		}
+	};
+
+	// for render-cover-gif.mjs: the loop's length, and a frame at a time, once the cards' faces and the fonts are in
+	window.LOOP = LOOP;
+	frame(0);
+	window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((img) => img.decode())]).then(() => {
+		window.frame = (t) =>
+			new Promise((resolve) => {
+				frame(t);
+				Promise.all([...document.images].map((img) => img.decode())).then(resolve);
+			});
 	});
 </script>
 </body>

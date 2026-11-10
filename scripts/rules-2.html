@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rules</title>
+<!-- The rules graphic for the itch.io page, in the format of Dark Matter's rules-2: Home's rules (src/Home.svelte, its
+     third RULE_TEXT in src/logic.js) styled as there, with its gold diamonds, on the game's velvet, with the challenge's
+     score and strikes after them (points in src/logic.js, MAX_STRIKES in src/const.js) and that aces are high. 450 × 400,
+     rendered by render-cover.sh at twice that. Change the wording with Home's and the game's. -->
+<style>
+	@font-face {
+		font-family: CG;
+		font-weight: 500;
+		src: url('../src/lib/fonts/Cormorant Garamond Medium.woff2');
+	}
+
+	html,
+	body {
+		margin: 0;
+		overflow: hidden;
+		background: #0d0306;
+	}
+
+	/* the game's page: velvet, lit from the upper left, in its double gold frame */
+	.card {
+		position: relative;
+		box-sizing: border-box;
+		width: 450px;
+		height: 400px;
+		display: grid;
+		place-content: center;
+		overflow: hidden;
+		background: radial-gradient(ellipse at 30% 0%, #5a1626 0%, #2b0b13 58%, #17050a 100%);
+	}
+
+	.border {
+		position: absolute;
+		border: 1px solid rgba(216, 180, 100, 0.6);
+	}
+
+	.outer {
+		inset: 6px;
+	}
+
+	.inner {
+		inset: 10px;
+		border-color: rgba(216, 180, 100, 0.3);
+	}
+
+	/* Home's .rules: no word alone on a rule's last line */
+	.rules {
+		text-wrap: pretty;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		width: 370px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		font-family: CG;
+		font-weight: 500;
+		font-size: 20px;
+		line-height: 1.3;
+		color: #eadfc6;
+	}
+
+	li {
+		display: flex;
+		gap: 14px;
+		align-items: baseline;
+	}
+
+	li::before {
+		content: '♦';
+		flex: none;
+		color: #d8b464;
+		font-size: 14px;
+	}
+
+	li em {
+		font-style: normal;
+		color: #e6c677;
+	}
+</style>
+</head>
+<body>
+<div class="card">
+	<div class="border outer"></div>
+	<div class="border inner"></div>
+	<ul class="rules">
+		<li><span>One row or column has <em>slipped</em> out of place.</span></li>
+		<li><span>Slide it back. Cards that leave one end <em>come round</em> at the other.</span></li>
+		<li><span>Touching cards must differ in rank by <em>at least two</em>. Aces are high.</span></li>
+		<li><span>Fix it in <em>one shift</em>. Beat the clock.</span></li>
+		<li><span>Each trick scores the <em>seconds left</em>, times the act. A wrong shift or running out of time is a strike; <em>three</em>, and the curtain falls.</span></li>
+	</ul>
+</div>
+</body>
+</html>
