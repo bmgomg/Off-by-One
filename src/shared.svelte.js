@@ -482,20 +482,6 @@ export function settle() {
 	});
 }
 
-/** Keyboard: slides the chosen lane one step further; false if another lane is already moving. */
-export function nudge(axis, idx, dir) {
-	if (!canMove()) return false;
-	if (lane.axis && (lane.axis !== axis || lane.idx !== idx)) return false;
-	if (!lane.axis) grab(axis, idx);
-	const from = lane.d;
-	lane.steps += dir;
-	if (mod(lane.steps, laneLen(axis)) === 0) sfx.home();
-	else sfx.tick();
-	game.busy = true;
-	tween(from, lane.steps * pitch(axis), 110, (v) => (lane.d = v), () => (game.busy = false));
-	return true;
-}
-
 export function cancelLane() {
 	if (!lane.axis || game.busy) return;
 	game.busy = true;

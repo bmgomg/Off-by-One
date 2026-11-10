@@ -25,7 +25,7 @@ playtest extras ("Start at level", rule and size switches in one place).
 - `src/logic.js`: cards, the rule, puzzle generation, levels, scoring, board geometry (tested in `logic.test.js`).
 - `src/shared.svelte.js`: settings (saved under `APP_STATE`, loaded once Home is up), the puzzle and the run, the timer, and moving a lane.
 - `src/utils.js`: `tween`, and `slideX` / `pushIn` / `pushOut`, the slide transitions.
-- `src/Splash.svelte`, `src/Home.svelte`, `src/Game Page.svelte`, `src/Board.svelte` (the cards, dragging with the wrap copy, keyboard, clash marks).
+- `src/Splash.svelte`, `src/Home.svelte`, `src/Game Page.svelte`, `src/Board.svelte` (the cards, dragging with the wrap copy, Esc, clash marks).
 - `src/sound.js`: synthesized effects. `src/cards.js`: the deck's images and names.
 - `src/lib/images/cards/`: the deck, 52 SVG faces from Race the Ace's `svg` branch (transparent backgrounds; the board paints the ivory face).
   `src/lib/images/BMG.webp`: the splash's logo, the template's.
@@ -57,8 +57,9 @@ hold them to the text's height, so the padding overflows and the board's room (`
 - Any shift that leaves the whole board valid wins, as in Race the Ace.
 - Touching cards must differ in rank by at least 2 (Race the Ace's rule). J = 11, Q = 12, K = 13, A = 14. A second
   rule, suit or rank, was offered on Home and dropped (the designer's call); the best score kept is the rank gap's.
-- Keyboard: arrows pick a card, Shift+arrows slide its lane, Enter commits, Esc cancels.
-- While a lane moves, the card it was taken by (under the finger, or the keyboard's cursor) is lifted (4% larger, above its neighbours)
+- Esc calls off a move, mid-drag too, the lane sliding back as it was; it's the only key (the designer's call: the
+  arrows to pick a card, Shift+arrows to slide its lane and Enter or Space to commit went).
+- While a lane moves, the card it was taken by (under the finger) is lifted (4% larger, above its neighbours)
   with a gold ring, and a
   dashed frame marks where it started; the frame turns solid and glows when the card is back in it, i.e. the lane is
   back as it was (letting go there shifts nothing). Passing back through home plays a soft two-note click (`sfx.home`)

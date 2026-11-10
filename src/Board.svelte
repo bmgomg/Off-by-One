@@ -14,7 +14,6 @@
 		grab,
 		lane,
 		laneLen,
-		nudge,
 		pitch,
 		settle
 	} from './shared.svelte';
@@ -36,7 +35,8 @@
 		easing: cubicOut,
 		css: squash(t)
 	});
-	let cursor = $state([0, 0]);
+	// the card the player took the lane by, under the pointer
+	let taken = $state([0, 0]);
 	let drag = null;
 
 	const g = $derived(geo());
@@ -92,12 +92,12 @@
 		})
 	);
 
-	// Where the player's lane started: the card they took it by (the cursor's: under the pointer, or the keys') gets a
+	// Where the player's lane started: the card they took it by gets a
 	// gold rim, and a dashed frame stays at its first place, lighting up when the card is back in it, which is the whole
 	// lane back as it was.
 	const anchor = $derived.by(() => {
 		if (!lane.user || lane.axis === null) return null;
-		const [r, c] = cursor;
+		const [r, c] = taken;
 		if ((lane.axis === 'row' ? r : c) !== lane.idx) return null;
 		const P = pitch(lane.axis);
 		const off = mod(lane.d, laneLen(lane.axis) * P);
@@ -123,7 +123,7 @@
 		const c = Math.min(game.C - 1, Math.max(0, Math.floor((e.clientX - rect.left) / s / g.p)));
 		const r = Math.min(game.R - 1, Math.max(0, Math.floor((e.clientY - rect.top) / s / g.pY)));
 		drag = { x0: e.clientX, y0: e.clientY, r, c, s, axis: null, last: 0, id: e.pointerId };
-		cursor = [r, c];
+		taken = [r, c];
 		boardEl.setPointerCapture(e.pointerId);
 	}
 
@@ -160,25 +160,16 @@
 		if (moved && lane.axis) settle();
 	}
 
+	// Esc, the one key: the move is called off, the lane sliding back as it was, mid-drag too
 	function onkeydown(e) {
-		const k = e.key;
-		if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', ' ', 'Escape'].includes(k)) return;
+		if (e.key !== 'Escape' || !lane.user || !lane.axis) return;
 		e.preventDefault();
-		const [r, c] = cursor;
-		if (k.startsWith('Arrow')) {
-			const across = k === 'ArrowLeft' || k === 'ArrowRight';
-			const dir = k === 'ArrowRight' || k === 'ArrowDown' ? 1 : -1;
-			if (e.shiftKey) nudge(across ? 'row' : 'col', across ? r : c, dir);
-			else if (!lane.axis) cursor = across ? [r, Math.min(game.C - 1, Math.max(0, c + dir))] : [Math.min(game.R - 1, Math.max(0, r + dir)), c];
-		} else if (k === 'Escape') cancelLane();
-		else if (lane.axis) settle();
+		drag = null;
+		cancelLane();
 	}
-
-	$effect(() => {
-		// keep the cursor on the board when its size changes
-		if (cursor[0] >= game.R || cursor[1] >= game.C) cursor = [0, 0];
-	});
 </script>
+
+<svelte:window {onkeydown} />
 
 <div
 	class="board"
@@ -187,15 +178,12 @@
 	class:dragging={lane.user && lane.axis !== null}
 	bind:this={boardEl}
 	style="width: {g.W}px; height: {g.H}px; --cw: {g.cw}px; --ch: {g.ch}px"
-	tabindex="0"
-	role="application"
-	aria-roledescription="card grid"
-	aria-label="Drag a row sideways or a column up or down. Keyboard: arrows pick a card, Shift and arrows slide its lane, Enter sets it, Escape cancels."
+	role="group"
+	aria-label="Drag a row sideways or a column up or down. Escape cancels."
 	{onpointerdown}
 	{onpointermove}
 	{onpointerup}
 	onpointercancel={onpointerup}
-	{onkeydown}
 >
 	{#if band}
 		<div class="band" class:answer={lane.answer} style="transform: translate({band.x}px, {band.y}px); width: {band.w}px; height: {band.h}px"></div>
@@ -211,7 +199,6 @@
 				class:moving={t.moving}
 				class:bad={badCells.has(t.i)}
 				class:anchor={anchor?.i === t.i}
-				class:cursor={cursor[0] * game.C + cursor[1] === t.i}
 				src={cardImage(t.code)}
 				alt={cardName(t.code)}
 				draggable="false"
@@ -246,7 +233,6 @@
 		position: relative;
 		overflow: hidden;
 		touch-action: none;
-		outline: none;
 	}
 
 	/* the hand only while a lane can be moved (not on a solved, waiting or face-down board), closed while one is */
@@ -256,10 +242,6 @@
 
 	.board.dragging {
 		cursor: grabbing;
-	}
-
-	.board:focus-visible {
-		box-shadow: 0 0 0 2px var(--gold-pale);
 	}
 
 	.card,
@@ -291,12 +273,6 @@
 	.card.bad {
 		box-shadow:
 			0 0 0 3px var(--bad),
-			0 3px 6px rgba(0, 0, 0, 0.55);
-	}
-
-	.board:focus-visible .card.cursor {
-		box-shadow:
-			0 0 0 3px var(--gold-pale),
 			0 3px 6px rgba(0, 0, 0, 0.55);
 	}
 
