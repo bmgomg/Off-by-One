@@ -11,7 +11,7 @@ import {
 	moveText,
 	points
 } from './logic';
-import { BOARD_H, BOARD_W, RANKS_H, SIZES } from './const';
+import { BOARD_H, BOARD_W, SIZES } from './const';
 
 // A small seeded generator so the tests are repeatable.
 const seeded = (seed) => () => {
@@ -79,14 +79,6 @@ describe('geometry', () => {
 			const g = geometry(R, C);
 			expect(g.W).toBeLessThanOrEqual(BOARD_W);
 			expect(g.H).toBeLessThanOrEqual(BOARD_H);
-		}
-	});
-
-	it('fits the boards of Practice under the second line of its rule', () => {
-		for (const [R, C] of Object.values(SIZES)) {
-			const g = geometry(R, C, BOARD_H - RANKS_H);
-			expect(g.W).toBeLessThanOrEqual(BOARD_W);
-			expect(g.H).toBeLessThanOrEqual(BOARD_H - RANKS_H);
 		}
 	});
 });

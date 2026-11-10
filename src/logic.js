@@ -12,7 +12,6 @@ export const mod = (a, n) => ((a % n) + n) % n;
 // The rule, as in Race the Ace: touching cards differ in rank by at least two. (A second rule, suit or rank, was dropped.)
 export const ok = (a, b) => Math.abs(rank(a) - rank(b)) >= 2;
 export const RULE_TEXT = 'Touching cards must differ in rank by at least two.';
-export const RANKS = ['Jack = 11', 'Queen = 12', 'King = 13', 'Ace = 14'];
 
 export const levelInfo = (L) => {
 	if (L <= LEVELS.length) return LEVELS[L - 1];
@@ -105,13 +104,13 @@ export function moveText(m, R, C) {
 	return `${m.axis} ${m.idx + 1} ${dir} by ${k}`;
 }
 
-// The largest cards that fit in BOARD_W × H: p is the column pitch, pY the row pitch, each a card and a gap.
-export function geometry(R, C, H = BOARD_H) {
+// The largest cards that fit: p is the column pitch, pY the row pitch, each a card and a gap.
+export function geometry(R, C) {
 	for (let p = Math.floor(BOARD_W / C); ; p--) {
 		const gap = Math.max(4, Math.round(p * CARD_GAP));
 		const cw = p - gap;
 		const ch = Math.round(cw / CARD_RATIO);
 		const pY = ch + gap;
-		if (R * pY <= H) return { p, pY, gap, cw, ch, W: C * p, H: R * pY };
+		if (R * pY <= BOARD_H) return { p, pY, gap, cw, ch, W: C * p, H: R * pY };
 	}
 }

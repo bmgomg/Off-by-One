@@ -45,7 +45,5 @@ export const MAX_STRIKES = 3;
 // aspect, and the gap between them is a share of the pitch, as in Race the Ace (6 px in 86).
 export const BOARD_W = 390;
 export const BOARD_H = 491;
-// Practice's board is this much shorter, for the rule's second line (the ranks' values) above the felt
-export const RANKS_H = 20;
 export const CARD_RATIO = 0.72;
 export const CARD_GAP = 0.07;

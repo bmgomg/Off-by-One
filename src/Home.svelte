@@ -26,7 +26,7 @@
 	<ul class="rules">
 		<li>One row or column has slipped out of place.</li>
 		<li>Slide it back. Cards that leave one end come round at the other.</li>
-		<li>{RULE_TEXT}</li>
+		<li>{RULE_TEXT} Aces are high.</li>
 		<li>Fix it in one shift. Beat the clock.</li>
 	</ul>
 
