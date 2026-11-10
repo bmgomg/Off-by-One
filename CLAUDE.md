@@ -162,6 +162,13 @@ starts, and zips the result as `build-itch/bitch.zip`, with `index.html` at the 
 `itch/wide-cover.gif` (Chrome over the DevTools protocol, and ffmpeg; `CHROME` and `CHROME_FLAGS` if Chrome isn't in its
 usual place on Windows). Each GIF is about 1 MB, under itch's 3 MB.
 
+`node scripts/render-screenshots.mjs`, after Dark Matter's, writes six screenshots of the real game to `itch/screenshots/`
+(900 × 1600) with the dev server running: 1-play (Challenge mid-drag, the answer's lane short of home), 2-act (the Act 1
+panel), 3-win, 4-home, 5-practice (5×5, Clashes on) and 6-final-curtain (reached act 2: the rest of act 1 and a trick of
+act 2 solved, then three wrong shifts; "reached act 1" didn't look good, the designer's call). It drags with the mouse,
+reading each answer from the store, and takes a lane by the card at the end the move leaves from, since Chrome drops mouse
+events past the window's edge. The puzzles are random: look at the results, and run it again for others.
+
 - `scripts/cover.html`: the felt caught mid-trick. A row is half a card from home, the card leaving at the right coming
   round at the left, the card it was taken by lifted with its gold ring over the dashed frame of where it started, as
   the board draws a move. The 3-row board is valid once the row is home, so the picture plays fair: change the cards
