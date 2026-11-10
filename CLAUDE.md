@@ -88,7 +88,10 @@ the board ("That's the trick."), and goes once the board is right. Each solve sc
 The clock has no playable floor, so every run ends. Tune `LEVELS`, `DECAY_SECS` and `MIN_SECS`
 in `src/const.js`. In the app's theme a level is an "act", a puzzle a "trick", the score "applause".
 
-Practice has no timer and a board-size choice, and lets you mark clashes. A wrong shift shows the same single Reset;
+Practice has no timer and a board-size choice, and lets you mark clashes. Above its felt is the rule, with a second line
+under it, quieter, giving the ranks' values (Jack = 11, Queen = 12, King = 13, Ace = 14), as Race the Ace does. To make
+room for that line, Practice's board is `RANKS_H` (20 px) shorter than `BOARD_H`, so its 4×4 and 5×5 cards are slightly
+smaller than Challenge's. 4×5 is limited by the width, so it's the same size in both. A wrong shift shows the same single Reset;
 there's no Reveal in Practice any more.
 
 ## Icon and offline play

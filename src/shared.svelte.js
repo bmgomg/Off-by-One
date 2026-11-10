@@ -1,4 +1,4 @@
-import { APP_STATE, MAX_STRIKES, RESET_SLIDE_MS, SIZES, TASKS_PER_LEVEL } from './const';
+import { APP_STATE, BOARD_H, MAX_STRIKES, RANKS_H, RESET_SLIDE_MS, SIZES, TASKS_PER_LEVEL } from './const';
 import { applyMove, badPairs, geometry, levelInfo, makePuzzle, mod, moveText, ok, points } from './logic';
 import { setMusic, setSound, sfx, startMusic } from './sound';
 import { reducedMotion, tween } from './utils';
@@ -82,7 +82,8 @@ export const game = $state({
  *  or the keys), not by Reset or Reveal, so the board shows where it started. */
 export const lane = $state({ axis: null, idx: 0, d: 0, steps: 0, answer: false, user: false });
 
-export const geo = () => geometry(game.R, game.C);
+// Practice gives up some of the board's height to the rule's second line
+export const geo = () => geometry(game.R, game.C, app.mode === 'practice' ? BOARD_H - RANKS_H : BOARD_H);
 export const pitch = (axis) => (axis === 'row' ? geo().p : geo().pY);
 export const laneLen = (axis) => (axis === 'row' ? game.C : game.R);
 export const levelSecs = () => levelInfo(game.run.level).secs;

@@ -3,7 +3,7 @@
 	import { untrack } from 'svelte';
 	import Board from './Board.svelte';
 	import { MAX_STRIKES, SIZES, STRIP_SLIDE_MS, TASKS_PER_LEVEL } from './const';
-	import { RULE_TEXT, levelInfo } from './logic';
+	import { RANKS, RULE_TEXT, levelInfo } from './logic';
 	import {
 		app,
 		clashes,
@@ -132,7 +132,12 @@
 	<div class="table" class:practice={!challenge}>
 		<div class="above">
 			{#if !challenge}
-				<div class="rule">{RULE_TEXT}</div>
+				<div class="rule">
+					<div>{RULE_TEXT}</div>
+					<div class="ranks">
+						{#each RANKS as r (r)}<span>{r}</span>{/each}
+					</div>
+				</div>
 			{/if}
 		</div>
 
@@ -481,10 +486,19 @@
 	}
 
 	.rule {
-		min-height: 22px;
+		display: grid;
+		justify-items: center;
 		font-style: italic;
-		font-size: 18px;
+		font-size: 19px;
+		line-height: 21px;
 		color: var(--label);
+	}
+
+	/* the values the rule counts by, quieter than the rule */
+	.ranks {
+		display: flex;
+		gap: 0.9em;
+		opacity: 0.75;
 	}
 
 	.timer {
@@ -553,10 +567,10 @@
 		place-items: center;
 	}
 
-	/* from the stats' foot (taking back the page's gap), with room for the rule */
+	/* from the stats' foot (taking back the page's gap), with room for the rule's two lines (RANKS_H more than one) */
 	.table.practice .above {
 		margin-top: -6px;
-		min-height: 34px;
+		min-height: 54px;
 	}
 
 	/* Each puzzle's cards on their own over the whole felt, centred, so the outgoing and incoming boards (of different
@@ -733,7 +747,7 @@
 		margin: 0;
 		max-width: 400px;
 		font-style: italic;
-		font-size: 20px;
+		font-size: 21px;
 		line-height: 1.2;
 		color: var(--cream);
 		text-align: center;
