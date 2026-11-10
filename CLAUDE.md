@@ -13,6 +13,7 @@ npm install
 npm run dev      # http://localhost:1130
 npm test         # the rules, generator, levels and board sizes
 npm run build    # static site in build/
+npm run build:itch  # itch.io build in build-itch/, zipped as bitch.zip
 npm run lint     # eslint and prettier, as in Dark Matter
 ```
 
@@ -146,6 +147,13 @@ with Resume, as in Race the Ace: it doesn't resume by itself (the designer's cal
 New Deal starts afresh instead; a run in Challenge can only be resumed (New Show went, the designer's call). A solved or revealed practice puzzle, a run that's over, or a game dealt under
 the other rules isn't brought back; a run waiting at an act's panel comes back to that panel, which is a prompt already.
 
+## itch.io build
+
+`npm run build:itch` runs `scripts/build-itch.js`, which is Dark Matter's, unchanged. With `ITCH` set, `svelte.config.js`
+builds statically into `build-itch/` and leaves out the service worker. The script then removes what does nothing inside
+itch's iframe (the install icons, the manifest, the app-install meta tags), strips `index.html` off the URL before the app
+starts, and zips the result as `build-itch/bitch.zip`, with `index.html` at the top. Upload that zip.
+
 ## itch.io art
 
 `sh scripts/render-cover.sh` writes the stills to `itch/`, as Dark Matter's does, with headless Edge or Chrome;
@@ -193,4 +201,4 @@ Simulated rule sets, from choosing the rule (one random shift applied to a valid
 ## Open questions
 
 - Lowest playable time limit, and whether to drop 3 or 5 seconds per level, or a percentage.
-- Not yet in the app: the itch.io build, a playtest level jump.
+- Not yet in the app: a playtest level jump.
