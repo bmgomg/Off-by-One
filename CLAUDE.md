@@ -145,6 +145,22 @@ with Resume, as in Race the Ace: it doesn't resume by itself (the designer's cal
 New Deal starts afresh instead; a run in Challenge can only be resumed (New Show went, the designer's call). A solved or revealed practice puzzle, a run that's over, or a game dealt under
 the other rules isn't brought back; a run waiting at an act's panel comes back to that panel, which is a prompt already.
 
+## itch.io art
+
+`sh scripts/render-cover.sh` writes the stills to `itch/`, as Dark Matter's does, with headless Edge or Chrome:
+
+- `scripts/cover.html`, the cover, 630 × 500: the title over the felt, caught mid-trick. The middle row is half a card
+  from home, its King leaving at the right and coming round at the left, the card it was taken by lifted with its gold
+  ring over the dashed frame of where it started, as the board draws a move. The board is valid once the row is home,
+  so the picture plays fair: change the cards with the rule.
+- `scripts/tile.html`, the page's background, a seamless tile, 1024 × 1024: a stage curtain in the game's velvet. Its
+  folds are waves a whole number of times across the tile, its nap noise that wraps, and it doesn't change from top to
+  bottom.
+- `scripts/rules.html`, the rules graphic for the page's description, 900 × 600, in the format of Dark Matter's: its
+  wording states the rule, the score and the three strikes, so change it with the game.
+
+Not yet made: the Embed BG, the social media image and a logo (Dark Matter has all three).
+
 ## Design notes
 
 Why shifting differs from swapping: a 4×5 board has 31 possible shifts against 190 swaps. A row
