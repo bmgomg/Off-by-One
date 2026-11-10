@@ -194,10 +194,10 @@
 				<div class="panel" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
 					<h2>Final curtain</h2>
 					<div class="big">{run.score}</div>
-					<p>{run.solved} of {run.tasks} tricks solved, reached act {run.level}. {run.newBest ? 'A new best!' : `Best: ${best}.`}</p>
+					<p>{run.solved} of {run.tasks} trick{run.tasks === 1 ? '' : 's'} solved, reached act {run.level}. {run.newBest ? 'A new best!' : `Best: ${best}.`}</p>
 					<div class="row">
-						<button type="button" class="btn primary" onclick={tapThen(newRun)}>Encore</button>
-						<button type="button" class="btn" onclick={tapThen(review)}>See the board</button>
+						<button type="button" class="btn small primary" onclick={tapThen(newRun)}>Encore</button>
+						<button type="button" class="btn small" onclick={tapThen(review)}>See the board</button>
 					</div>
 				</div>
 			</div>
@@ -636,10 +636,11 @@
 		z-index: 5;
 	}
 
+	/* wide enough for a row of two small buttons (Encore and See the board, 292 px), and within the narrowest felt (4×4) */
 	.panel {
-		width: 300px;
+		width: 340px;
 		box-sizing: border-box;
-		padding: 32px 26px 30px;
+		padding: 32px 22px 30px;
 		background: var(--velvet);
 		border: 1px solid var(--gold);
 		outline: 1px solid rgba(216, 180, 100, 0.35);
