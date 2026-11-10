@@ -157,10 +157,13 @@ usual place on Windows). Each GIF is about 1 MB, under itch's 3 MB.
   round at the left, the card it was taken by lifted with its gold ring over the dashed frame of where it started, as
   the board draws a move. The 3-row board is valid once the row is home, so the picture plays fair: change the cards
   with the rule. Animated (`window.frame`, a 5 s loop starting on the still), the row goes home, the felt glows as on a
-  win, the next deal pushes the cards off to the left, and the same board comes in slipped and is taken up again.
+  win, the next deal pushes the cards off to the left, and the same board comes in slipped and is taken up again. The
+  drag is one move from as dealt to home, eased once across the loop's seam with the still at its middle, so it never
+  stops half-way (the designer's call).
   Layouts: the cover, 630 × 500, the title over the board; `#embed`, the Embed BG, 640 × 360, the title above itch's Run
-  Game button and a single row of cards below it, clear velvet between; `#wide`, the Wide Cover, 840 × 360, no title
-  (itch puts its own over promo modules), the board right of centre; `#social`, the social media image, 1200 × 630, the
+  Game button and a single row of cards below it, clear velvet between; `#wide`, the Wide Cover, 840 × 360, the
+  title on the left and the board on the right (itch says only that it's for special home page featuring: nothing
+  puts a title over it, as was once supposed); `#social`, the social media image, 1200 × 630, the
   title on the left and the board on the right.
 - `scripts/tile.html`, the page's background, a seamless tile, 1024 × 1024: a stage curtain in the game's velvet. Its
   folds are waves a whole number of times across the tile, its nap noise that wraps, and it doesn't change from top to

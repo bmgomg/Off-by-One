@@ -12,8 +12,8 @@
      (no hash)  the cover, 630 × 500, the title over the board
      #embed     the Embed BG, 640 × 360: itch puts its Run Game button in the middle, so the title is above it and a
                 single row of cards below it, with clear velvet between
-     #wide      the Wide Cover, 840 × 360 (21:9), for itch's home page features: no title, which itch puts over its promo
-                modules itself; the board right of centre, as in Dark Matter's
+     #wide      the Wide Cover, 840 × 360 (21:9), for itch's home page features: the title on the left, the board on
+                the right, as #social (itch says only that it's for special home page featuring, nothing of an overlay)
      #social    the social media image, 1200 × 630: the title on the left, the board on the right, since a link preview
                 has no overlay -->
 <style>
@@ -138,7 +138,20 @@
 	}
 
 	.wide .titles {
-		display: none;
+		top: 0;
+		bottom: 0;
+		right: auto;
+		width: 450px;
+		align-content: center;
+		gap: 10px;
+	}
+
+	.wide h1 {
+		font-size: 66px;
+	}
+
+	.wide .tagline {
+		font-size: 25px;
 	}
 
 	.social .titles {
@@ -230,7 +243,7 @@
 	const LAYOUTS = {
 		cover: { W: 630, H: 500, CW: 70, FX: 315, FY: 308, SPOT: '46% 50% at 50% 66%', ...BOARD },
 		embed: { W: 640, H: 360, CW: 70, FX: 320, FY: 280, SPOT: '50% 40% at 50% 78%', ...ROW },
-		wide: { W: 840, H: 360, CW: 64, FX: 530, FY: 180, SPOT: '36% 60% at 63% 50%', ...BOARD },
+		wide: { W: 840, H: 360, CW: 64, FX: 625, FY: 180, SPOT: '30% 60% at 74% 50%', ...BOARD },
 		social: { W: 1200, H: 630, CW: 100, FX: 880, FY: 315, SPOT: '36% 60% at 72% 50%', ...BOARD }
 	};
 	const NAME = location.hash.slice(1) || 'cover';
@@ -287,21 +300,20 @@
 
 	const clamp = (t) => Math.min(1, Math.max(0, t));
 	const span = (t, from, to) => clamp((t - from) / (to - from));
-	const easeOut = (t) => 1 - (1 - t) ** 3;
 	const easeInOut = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 	const mod = (a, n) => ((a % n) + n) % n;
 
-	// the loop, in seconds: the still, the row going home, the felt's glow, the next deal, and the row taken up again
+	// the loop, in seconds: the row going home, the felt's glow, the next deal, and the row taken up again. The drag is one
+	// move, from as dealt to home, eased once across the loop's seam, its middle at 0: so the loop starts on the still,
+	// the row half a card along, with no stop there
 	const LOOP = 5;
-	const HOLD = 1.5;
-	const HOME = [HOLD, 2.1];
-	const DROP = [2.1, 2.35];
-	const DEAL = [3.4, 3.9];
-	const GLOW_OFF = [3.4, 3.7];
-	const TAKE = [4.1, 4.3];
-	const DRAG = [4.3, LOOP];
-	// how far the dragged row is from home, in cards, in the still
-	const ALONG = 0.5;
+	const DRAG_HALF = 0.6;
+	const DROP = [DRAG_HALF, 0.85];
+	const DEAL = [2.1, 2.6];
+	const GLOW_OFF = [2.1, 2.4];
+	const TAKE = [4.2, LOOP - DRAG_HALF];
+	// how far along the drag is, 0 to 1, a half at 0: the loop's first half counts as the end of the one before
+	const dragged = (t) => easeInOut(clamp(((t < LOOP / 2 ? t + LOOP : t) - (LOOP - DRAG_HALF)) / (2 * DRAG_HALF)));
 	// the anchor counts as back in its frame within this much of a pitch, as in the board
 	const NEAR = 0.15;
 
@@ -364,13 +376,13 @@
 		felt.style.boxShadow = `0 0 34px rgba(243, 220, 156, ${0.45 * glow}), 0 18px 36px rgba(0, 0, 0, 0.6)`;
 
 		if (t < DEAL[0]) {
-			drawBoard(0, ALONG * (1 - easeOut(span(t, ...HOME))), 1 - span(t, ...DROP));
+			drawBoard(0, 1 - dragged(t), 1 - span(t, ...DROP));
 		} else if (t < DEAL[1]) {
 			const push = easeInOut(span(t, ...DEAL)) * FW;
 			drawBoard(-push, 0, 0);
 			drawBoard(FW - push, 1, 0);
 		} else {
-			drawBoard(0, 1 - ALONG * easeInOut(span(t, ...DRAG)), span(t, ...TAKE));
+			drawBoard(0, 1 - dragged(t), span(t, ...TAKE));
 		}
 	};
 
