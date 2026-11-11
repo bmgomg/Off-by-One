@@ -627,8 +627,10 @@
 		flex: 1 1 var(--above);
 	}
 
+	/* and the tall boards (4×4, 5×5), which leave next to nothing to share, a little further from the stats */
 	.table.practice .above {
 		margin-top: -6px;
+		min-height: 16px;
 	}
 
 	/* Each puzzle's cards on their own over the whole felt, centred, so the outgoing and incoming boards (of different
