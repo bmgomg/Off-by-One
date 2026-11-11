@@ -545,7 +545,7 @@
 	.rule {
 		margin: 0;
 		font-style: italic;
-		font-size: 21px;
+		font-size: 22px;
 		line-height: 1.2;
 		color: var(--label);
 		text-align: center;
@@ -823,7 +823,7 @@
 		margin: 0;
 		max-width: 400px;
 		font-style: italic;
-		font-size: 21px;
+		font-size: 22px;
 		line-height: 1.2;
 		color: var(--cream);
 		text-align: center;
