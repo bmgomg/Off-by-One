@@ -122,8 +122,11 @@ changes.
   once, with no card and no confirmation (the designer's call: it's benign). A puzzle under way still counts as played.
 - **Challenge:** Stats opens a card over the board (sliding in like the act panel) with Shows, Average applause, Best
   applause and Furthest act, of shows that have ended (`app.stats`, saved with the settings; a best score saved before
-  the stats carries over). Tricks solved aren't counted (the designer's call). Two buttons: Reset stats, which also
-  closes the card, with no confirmation (the designer's call), and Close. Stats is disabled while the clock runs (a
+  the stats carries over). Tricks solved aren't counted (the designer's call). Two buttons: Reset stats, with no
+  confirmation (the designer's call), and Close. Reset stats clears the figures on the card first, numbers rolling to 0
+  by NumberFlow and a number turning into a dash rolling out below as the dash rolls in from above (`roll` in
+  `src/utils.js`), then closes the card by itself (`STATS_RESET_CLOSE_MS`, 1.4 s; Close or the clock starting meanwhile
+  cancels that). Stats is disabled while the clock runs (a
   card mid-trick would eat the clock or show the board for free), and the clock starting puts the card away. A show
   under way counts when it ends, after a reset too.
 

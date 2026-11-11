@@ -21,6 +21,8 @@ export const FLIP_MS = 360;
 export const FLIP_WAVE_MS = 40;
 // Reset slides the wrongly shifted lane back where it was dealt, in this long
 export const RESET_SLIDE_MS = 400;
+// Reset stats on the stats card: the figures roll to a clean slate there, and the card closes this long after
+export const STATS_RESET_CLOSE_MS = 1400;
 
 export const SIZES = { '4x4': [4, 4], '4x5': [4, 5], '5x5': [5, 5] };
 

@@ -27,6 +27,16 @@ export const slideX = (node, { from, unit = 'vw', duration, delay = 0 }) => {
 	return { delay, duration: reducedMotion() ? 0 : duration, easing: cubicInOut, css: (t) => `translate: ${at(t)};` };
 };
 
+// A Svelte transition that rolls a figure vertically, fading: `from` -1 to come in from above, 1 to go out below, as
+// NumberFlow's digits roll down; for a figure that turns into a dash or back, which NumberFlow can't roll. With reduced
+// motion it's instant.
+export const roll = (node, { from, duration = 500, delay = 0 }) => ({
+	delay,
+	duration: reducedMotion() ? 0 : duration,
+	easing: cubicInOut,
+	css: (t, u) => `opacity: ${t}; translate: 0 ${u * from * 0.6}em;`
+});
+
 // A push within the page, by its width, so whatever slides is off it (and clipped) at either end: `way` 1 for on, the
 // new one coming in from the right, -1 for back. Spread into an in: and an out: of slideX.
 export const pushIn = (way, duration) => ({ from: way * DX, unit: 'px', duration });

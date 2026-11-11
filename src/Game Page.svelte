@@ -2,7 +2,7 @@
 	import NumberFlow, { NumberFlowGroup } from '@number-flow/svelte';
 	import { untrack } from 'svelte';
 	import Board from './Board.svelte';
-	import { MAX_STRIKES, SIZES, STRIP_SLIDE_MS, TASKS_PER_LEVEL } from './const';
+	import { MAX_STRIKES, SIZES, STATS_RESET_CLOSE_MS, STRIP_SLIDE_MS, TASKS_PER_LEVEL } from './const';
 	import { RULE_TEXT, levelInfo } from './logic';
 	import {
 		app,
@@ -27,7 +27,7 @@
 		resetStats
 	} from './shared.svelte';
 	import { sfx } from './sound';
-	import { pushIn, pushOut, slideX } from './utils';
+	import { pushIn, pushOut, reducedMotion, roll, slideX } from './utils';
 
 	const challenge = $derived(app.mode === 'challenge');
 	const g = $derived(geo());
@@ -46,6 +46,24 @@
 	$effect(() => {
 		if (game.running) statsOpen = false;
 	});
+	// Reset stats: the figures roll to a clean slate on the card, which then closes by itself
+	let closing = $state(false);
+	let closeTimer;
+	const closeStats = () => {
+		clearTimeout(closeTimer);
+		closing = false;
+		statsOpen = false;
+	};
+	const resetStatsCard = () => {
+		resetStats();
+		closing = true;
+		closeTimer = setTimeout(closeStats, reducedMotion() ? STATS_RESET_CLOSE_MS / 2 : STATS_RESET_CLOSE_MS);
+	};
+	// put away otherwise (the clock starting), or the page going: no close left pending
+	$effect(() => {
+		if (!statsOpen && closing) closeStats();
+	});
+	$effect(() => () => clearTimeout(closeTimer));
 	const st = $derived(app.stats);
 	// nothing for a reset to clear: Practice's tally already as a reset leaves it (a puzzle under way counts as played),
 	// or no Challenge stats yet
@@ -160,14 +178,19 @@
 					<dl class="stats-list">
 						{#each STATS as [label, value] (label)}
 							<dt>{label}</dt>
-							<dd>{value}</dd>
+							<!-- a number rolls to its new value; a number becoming a dash, or back, rolls one out and the other in -->
+							<dd>
+								{#key typeof value}
+									<span class="fig" in:roll={{ from: -1 }} out:roll={{ from: 1 }}>
+										{#if typeof value === 'number'}<NumberFlow {value} />{:else}{value}{/if}
+									</span>
+								{/key}
+							</dd>
 						{/each}
 					</dl>
 					<div class="row">
-						<button type="button" class="btn small" disabled={statsClear} onclick={tapThen(() => (resetStats(), (statsOpen = false)))}
-							>Reset stats</button
-						>
-						<button type="button" class="btn small primary" onclick={tapThen(() => (statsOpen = false))}>Close</button>
+						<button type="button" class="btn small" disabled={statsClear || closing} onclick={tapThen(resetStatsCard)}>Reset stats</button>
+						<button type="button" class="btn small primary" onclick={tapThen(closeStats)}>Close</button>
 					</div>
 				</div>
 			</div>
@@ -616,11 +639,23 @@
 		color: var(--cream);
 	}
 
+	/* the outgoing and incoming figures in one cell, at the right; held to the line's height, so NumberFlow's padding
+	   for its roll (as in .val) overflows and the rows keep their spacing */
 	.stats-list dd {
 		margin: 0;
+		height: 1.2em;
+		display: grid;
+		justify-items: end;
+		align-items: center;
 		font-family: var(--display);
 		color: var(--gold-hi);
-		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.fig {
+		grid-area: 1/1;
+		display: flex;
+		align-items: center;
 	}
 
 	.toolbar button:disabled {
