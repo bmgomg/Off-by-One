@@ -541,11 +541,14 @@
 		outline-offset: 2px;
 	}
 
+	/* the message's size, in the labels' colour */
 	.rule {
 		margin: 0;
 		font-style: italic;
-		font-size: 19px;
+		font-size: 21px;
+		line-height: 1.2;
 		color: var(--label);
+		text-align: center;
 	}
 
 	.timer {
