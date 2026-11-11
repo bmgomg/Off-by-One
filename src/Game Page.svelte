@@ -14,6 +14,7 @@
 		newDeal,
 		newRun,
 		next,
+		PROMPT,
 		review,
 		setSize,
 		showAnswer,
@@ -178,7 +179,7 @@
 	{/if}
 
 	<!-- the felt in the middle of the room, and under it, down to the toolbar, the message and its buttons (and
-	     Practice's rule), centred between the felt and the toolbar, following the felt as it eases to a new size -->
+	     Practice's rule, with the opening line), centred between the felt and the toolbar, following the felt as it eases to a new size -->
 	<div class="table" class:practice={!challenge}>
 		<div class="above"></div>
 
@@ -202,7 +203,8 @@
 		<div class="strip" aria-live="polite">
 			{#key strip}
 				<div class="step" in:slideX={pushIn(1, STRIP_SLIDE_MS)} out:slideX={pushOut(1, STRIP_SLIDE_MS)}>
-					{#if !challenge}
+					<!-- Practice's rule, only with the puzzle's opening line -->
+					{#if !challenge && !game.paused && game.msg.text === PROMPT}
 						<p class="rule">{RULE_TEXT}</p>
 					{/if}
 					{#if !game.paused && game.msg.text}

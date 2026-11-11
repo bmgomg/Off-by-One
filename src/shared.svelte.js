@@ -99,6 +99,9 @@ export const levelSecs = () => levelInfo(game.run.level).secs;
 export const clashes = () => badPairs(game.grid, game.R, game.C, ok);
 export const canMove = () => game.phase === 'play' && !game.busy && !game.paused && (app.mode === 'practice' || game.running);
 
+// what a puzzle under way says (and, in Practice, the rule goes with it, alone)
+export const PROMPT = 'One lane is off. Slide it back.';
+
 const say = (text, tone = '') => {
 	game.msg = { text, tone };
 };
@@ -182,7 +185,7 @@ export function newDeal() {
 	deal();
 	game.phase = 'play';
 	game.practice.played++;
-	say('One lane is off. Slide it back.');
+	say(PROMPT);
 	sfx.deal();
 }
 
@@ -206,7 +209,7 @@ export function newRun() {
 
 export function startPlay() {
 	game.phase = 'play';
-	say('One lane is off. Slide it back.');
+	say(PROMPT);
 	sfx.deal();
 	startTimer();
 }

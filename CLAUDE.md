@@ -94,8 +94,8 @@ the board ("That's the trick."), and goes once the board is right. Each solve sc
 The clock has no playable floor, so every run ends. Tune `LEVELS`, `DECAY_SECS` and `MIN_SECS`
 in `src/const.js`. In the app's theme a level is an "act", a puzzle a "trick", the score "applause".
 
-Practice has no timer and a board-size choice (4×4 by default), and lets you mark clashes. The rule is shown under its felt, on one line, with
-the message. In both modes the message, its buttons and Practice's rule stay centred between the felt and the toolbar,
+Practice has no timer and a board-size choice (4×4 by default), and lets you mark clashes. The rule is shown under its felt, on one line, over
+the message, and only with "One lane is off. Slide it back." (`PROMPT`). In both modes the message, its buttons and Practice's rule stay centred between the felt and the toolbar,
 following the felt as it eases to a new board size (`--strip` in the Game Page holds their least room).
 A second line with the ranks' values (Jack = 11 … Ace = 14) was tried and dropped (the designer's call): under the
 rank gap, Home's rule says "Aces are high." instead. A wrong shift shows the same single Reset; there's no Reveal in Practice any more.
