@@ -9,7 +9,7 @@ const KEY = APP_STATE;
 export const app = $state({
 	page: 'home',
 	mode: 'practice',
-	size: '4x5',
+	size: '4x4',
 	sound: true,
 	music: true,
 	// Challenge's record under the rule in play, of shows that have ended: how many, their applause in all, the best,
@@ -36,7 +36,7 @@ export function loadSettings() {
 	} catch {
 		// nothing saved, or storage unavailable
 	}
-	app.size = SIZES[saved.size] ? saved.size : '4x5';
+	app.size = SIZES[saved.size] ? saved.size : '4x4';
 	app.sound = saved.sound !== false;
 	app.music = saved.music !== false;
 	// Each rule's stats. From before they were kept per rule, the stats alone were the rank gap's (the one rule then);
