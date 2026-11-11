@@ -1,5 +1,5 @@
 import { APP_STATE, MAX_STRIKES, RESET_SLIDE_MS, SIZES, TASKS_PER_LEVEL } from './const';
-import { applyMove, badPairs, geometry, levelInfo, makePuzzle, mod, moveText, ok, points } from './logic';
+import { RULE, applyMove, badPairs, geometry, levelInfo, makePuzzle, mod, moveText, ok, points } from './logic';
 import { setMusic, setSound, sfx, startMusic } from './sound';
 import { reducedMotion, tween } from './utils';
 
@@ -12,13 +12,17 @@ export const app = $state({
 	size: '4x5',
 	sound: true,
 	music: true,
-	// Challenge's record, of shows that have ended: how many, their applause in all, the best, the furthest act
+	// Challenge's record under the rule in play, of shows that have ended: how many, their applause in all, the best,
+	// the furthest act
 	stats: newStats()
 });
 
 export function newStats() {
 	return { shows: 0, total: 0, best: 0, furthest: 0 };
 }
+
+// each rule's record, saved together; app.stats is the one in play
+let statsByRule = {};
 
 // Called once Home is up, after the splash, so a tap on the splash (which wipes the save) comes first.
 let loaded = false;
@@ -35,17 +39,23 @@ export function loadSettings() {
 	app.size = SIZES[saved.size] ? saved.size : '4x5';
 	app.sound = saved.sound !== false;
 	app.music = saved.music !== false;
-	// saved per rule while there were two: the rank gap's carries over
-	app.stats = { ...newStats(), ...saved.stats };
-	// from before the stats: the best score alone (kept per rule while there were two: the rank gap's carries over)
-	if (!saved.stats && saved.best) app.stats.best = typeof saved.best === 'number' ? saved.best : saved.best.gap || 0;
+	// Each rule's stats. From before they were kept per rule, the stats alone were the rank gap's (the one rule then);
+	// from before the stats, the best score alone, a number while there was one rule, else per rule.
+	statsByRule = saved.statsByRule || {};
+	if (!saved.statsByRule && saved.stats) statsByRule.gap = saved.stats;
+	if (!saved.statsByRule && !saved.stats && saved.best) {
+		const best = typeof saved.best === 'number' ? { gap: saved.best } : saved.best;
+		for (const rule in best) if (best[rule]) statsByRule[rule] = { best: best[rule] };
+	}
+	app.stats = { ...newStats(), ...statsByRule[RULE] };
 	setSound(app.sound);
 	setMusic(app.music, false);
 }
 
 export function save() {
 	try {
-		localStorage.setItem(KEY, JSON.stringify({ size: app.size, sound: app.sound, music: app.music, stats: app.stats }));
+		statsByRule = { ...statsByRule, [RULE]: $state.snapshot(app.stats) };
+		localStorage.setItem(KEY, JSON.stringify({ size: app.size, sound: app.sound, music: app.music, statsByRule }));
 	} catch {
 		// storage can be unavailable (private mode); settings then last for the session
 	}
@@ -225,7 +235,8 @@ export function next() {
 // so it can be come back to, after a restart too: the puzzle and where it stands, the clock's time used and whether it
 // was running, the shift Reset would undo, and the mode's tally (Practice) or run
 // (Challenge).
-const gameKey = () => `${APP_STATE} • ${app.mode}`;
+// Each rule's games are kept apart, so neither takes the other's (the rank gap's, the one rule once, under the old key).
+const gameKey = () => `${APP_STATE} • ${app.mode}${RULE === 'gap' ? '' : ` • ${RULE}`}`;
 const TABLE = ['R', 'C', 'grid', 'puzzle', 'solutions', 'phase', 'msg', 'left', 'showClashes', 'reviewing'];
 
 /** Saves the game of the mode being played; `clock`, whether its clock is running (or was, before it paused). */
@@ -235,7 +246,7 @@ export function saveGame(clock = running || !!game.paused?.clock) {
 	for (const k of TABLE) table[k] = $state.snapshot(game[k]);
 	const tally = $state.snapshot(app.mode === 'practice' ? game.practice : game.run);
 	try {
-		localStorage.setItem(gameKey(), JSON.stringify({ table, tally, elapsed: elapsedMs(), clock, wrongMove }));
+		localStorage.setItem(gameKey(), JSON.stringify({ rule: RULE, table, tally, elapsed: elapsedMs(), clock, wrongMove }));
 	} catch {
 		// storage unavailable: the game lasts as long as the page
 	}
@@ -254,8 +265,8 @@ function loadGame() {
  *  clock stopped, unless it's at an act's panel, which is a prompt of its own. Whether it did. */
 function restore(saved) {
 	const live = app.mode === 'practice' ? ['play', 'wrong'] : ['ready', 'play', 'wrong', 'solved', 'failed', 'revealed'];
-	// (a game saved under the dropped suit-or-rank rule isn't brought back)
-	if (!saved?.table || (saved.rule && saved.rule !== 'gap') || !live.includes(saved.table.phase)) return false;
+	// only under the rule it was dealt under (a save from before the rule was kept is the rank gap's)
+	if (!saved?.table || (saved.rule || 'gap') !== RULE || !live.includes(saved.table.phase)) return false;
 	clearLane();
 	Object.assign(game, saved.table, { busy: false, flash: '' });
 	if (app.mode === 'challenge') game.run = saved.tally;

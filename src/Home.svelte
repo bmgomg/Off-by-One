@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { cardImage } from './cards';
 	import { TAGLINE } from './const';
-	import { RULE_TEXT } from './logic';
+	import { RULE, RULE_TEXT } from './logic';
 	import { loadSettings, startChallenge, startPractice } from './shared.svelte';
 	import { sfx } from './sound';
 
@@ -26,7 +26,7 @@
 	<ul class="rules">
 		<li>One row or column has slipped out of place.</li>
 		<li>Slide it back. Cards that leave one end come round at the other.</li>
-		<li>{RULE_TEXT} Aces are high.</li>
+		<li>{RULE_TEXT}{RULE === 'gap' ? ' Aces are high.' : ''}</li>
 		<li>Fix it in one shift. Beat the clock.</li>
 	</ul>
 

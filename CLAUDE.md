@@ -56,8 +56,14 @@ hold them to the text's height, so the padding overflows and the board's room (`
 
 - One row or column has been shifted out of place. Drag it back: rows sideways, columns up or down.
 - Any shift that leaves the whole board valid wins, as in Race the Ace.
-- Touching cards must differ in rank by at least 2 (Race the Ace's rule). J = 11, Q = 12, K = 13, A = 14. A second
-  rule, suit or rank, was offered on Home and dropped (the designer's call); the best score kept is the rank gap's.
+- Touching cards must share a suit or a rank (the designer's call, after a re-test). Its deals skip grids that come
+  out as plain stripes (`striped` in `src/logic.js`).
+- The first rule, Race the Ace's (touching cards differ in rank by at least 2; J = 11, Q = 12, K = 13, A = 14), stays
+  for playtesting: `?rule=gap` in the address (e.g. `localhost:1130/?rule=gap`, a reload to change) plays it, with its
+  own rule text and Home's "Aces are high." (`RULES`, `RULE` in `src/logic.js`). Each rule has its own saved games
+  (suit or rank's under `APP_STATE • practice • match` and `• challenge • match`, the rank gap's under the old keys)
+  and its own stats (`statsByRule` in the settings; the stats saved before were the rank gap's, and carry over to it).
+  The levels' clock was tuned under the rank gap.
 - Esc calls off a move, mid-drag too, the lane sliding back as it was; it's the only key (the designer's call: the
   arrows to pick a card, Shift+arrows to slide its lane and Enter or Space to commit went).
 - While a lane moves, the card it was taken by (under the finger) is lifted (4% larger, above its neighbours)
@@ -89,8 +95,8 @@ The clock has no playable floor, so every run ends. Tune `LEVELS`, `DECAY_SECS` 
 in `src/const.js`. In the app's theme a level is an "act", a puzzle a "trick", the score "applause".
 
 Practice has no timer and a board-size choice, and lets you mark clashes. The rule is shown above its felt, on one line.
-A second line with the ranks' values (Jack = 11 … Ace = 14) was tried and dropped (the designer's call): Home's rule
-says "Aces are high." instead. A wrong shift shows the same single Reset; there's no Reveal in Practice any more.
+A second line with the ranks' values (Jack = 11 … Ace = 14) was tried and dropped (the designer's call): under the
+rank gap, Home's rule says "Aces are high." instead. A wrong shift shows the same single Reset; there's no Reveal in Practice any more.
 
 ## Icon and offline play
 
@@ -121,8 +127,8 @@ changes.
 - **Practice:** the Solved tally (solved / played) is all there is, so its button is Reset Stats, which clears it at
   once, with no card and no confirmation (the designer's call: it's benign). A puzzle under way still counts as played.
 - **Challenge:** Stats opens a card over the board (sliding in like the act panel) with Shows, Average applause, Best
-  applause and Furthest act, of shows that have ended (`app.stats`, saved with the settings; a best score saved before
-  the stats carries over). Tricks solved aren't counted (the designer's call). Two buttons: Reset stats, with no
+  applause and Furthest act, of shows that have ended, under the rule in play (`app.stats`, saved with the settings in
+  `statsByRule`, one record per rule; a best score saved before the stats carries over to its rule). Tricks solved aren't counted (the designer's call). Two buttons: Reset stats, with no
   confirmation (the designer's call), and Close. Reset stats clears the figures on the card first, numbers rolling to 0
   by NumberFlow and a number turning into a dash rolling out below as the dash rolls in from above (`roll` in
   `src/utils.js`), then closes the card by itself (`STATS_RESET_CLOSE_MS`, 1.4 s; Close or the clock starting meanwhile
@@ -143,13 +149,14 @@ BMG games' shared tracks. Settle that, and any credit it requires, before releas
 
 ## Coming back to a game
 
-Each mode's game is saved in localStorage (`APP_STATE • practice`, `APP_STATE • challenge`) as it changes, each second of
+Each mode's game is saved in localStorage (`APP_STATE • practice • match`, `APP_STATE • challenge • match`; the rank
+gap's playtest under `APP_STATE • practice` and `APP_STATE • challenge`) as it changes, each second of
 the clock, on Back, and when the app is hidden: the puzzle and where it stands, the clock's time used and whether it was
 running, the rules it was dealt under, the shift Reset would undo, and Practice's tally or the run. Going to a mode
 again, after a restart too, brings its game back face down under a panel, "Puzzle in progress" or "Show in progress",
 with Resume, as in Race the Ace: it doesn't resume by itself (the designer's call), and the clock waits for Resume. In Practice,
 New Deal starts afresh instead; a run in Challenge can only be resumed (New Show went, the designer's call). A solved or revealed practice puzzle, a run that's over, or a game dealt under
-the other rules isn't brought back; a run waiting at an act's panel comes back to that panel, which is a prompt already.
+the other rule isn't brought back; a run waiting at an act's panel comes back to that panel, which is a prompt already.
 
 ## itch.io build
 
