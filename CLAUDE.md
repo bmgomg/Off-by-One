@@ -182,7 +182,8 @@ events past the window's edge. The puzzles are random: look at the results, and 
 - `scripts/cover.html`: the felt caught mid-trick. A row is half a card from home, the card leaving at the right coming
   round at the left, the card it was taken by lifted with its gold ring over the dashed frame of where it started, as
   the board draws a move. The 3-row board is valid once the row is home, so the picture plays fair: change the cards
-  with the rule. Animated (`window.frame`, a 5 s loop starting on the still), the row goes home, the felt glows as on a
+  with the rule. Under suit or rank, both it and the Embed BG's row clash as dealt and solve only by the way home, and
+  the board isn't striped (picked by a search over generated boards). Animated (`window.frame`, a 5 s loop starting on the still), the row goes home, the felt glows as on a
   win, the next deal pushes the cards off to the left, and the same board comes in slipped and is taken up again. The
   drag is one move from as dealt to home, eased once across the loop's seam with the still at its middle, so it never
   stops half-way (the designer's call).
@@ -195,8 +196,8 @@ events past the window's edge. The puzzles are random: look at the results, and 
   folds are waves a whole number of times across the tile, its nap noise that wraps, and it doesn't change from top to
   bottom.
 - `scripts/rules-2.html`, the rules graphic for the page's description, 450 × 320 rendered at twice that, in the format of
-  Dark Matter's rules-2: Home's rules styled as there, with that aces are high (the score and strikes were dropped, the
-  designer's call). Change it with Home's wording.
+  Dark Matter's rules-2: Home's rules styled as there, suit or rank's (the score and strikes were dropped, the designer's
+  call; "Aces are high." went with the rank gap). Change it with Home's wording.
 - `scripts/logo.html`, the logo, 1000 × 300 on transparency: the icon's heart and spade as two cards of a row, the spade
   slid off its dashed frame and lifted with its gold ring, beside the title. Gold letters and ivory cards on dark
   outlines, as itch wants it legible on white and black.

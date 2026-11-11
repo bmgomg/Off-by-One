@@ -6,7 +6,8 @@
 <!-- The itch.io art, rendered by render-cover.sh (stills) and render-cover-gif.mjs (GIFs): the felt caught mid-trick.
      A row is on its way back, half a card along: the card leaving at the right comes round at the left (the wrap copy,
      as the board draws it), and the card it was taken by is lifted with its gold ring over the dashed frame of where it
-     started. The 3-row board is valid once the row is home (the rank gap, ok in logic.js), so the picture plays fair.
+     started. The 3-row board is valid once the row is home (suit or rank, ok in logic.js, and not striped), and the
+     embed's row too, each clashing as dealt, so the picture plays fair.
      Animated (window.frame), the row goes home, the felt glows as on a win, the next deal pushes the cards off to the
      left, and the same board comes in slipped and is taken up again, back to the first frame. Layouts:
      (no hash)  the cover, 630 × 500, the title over the board
@@ -230,15 +231,15 @@
 	// one to the right; and the card it was taken by, in the solved row, so its frame is one place to the right
 	const BOARD = {
 		cards: [
-			['SA', 'H9', 'CQ', 'D4', 'S7'],
-			['DJ', 'C6', 'H2', 'S10', 'HK'],
-			['C8', 'HQ', 'S5', 'D7', 'C3']
+			['DJ', 'HJ', 'H9', 'C9', 'CK'],
+			['DA', 'HA', 'HQ', 'CQ', 'C6'],
+			['CA', 'SA', 'SQ', 'DQ', 'D6']
 		],
 		row: 1,
 		anchor: 2
 	};
 	// the Embed BG's: one row, under the button
-	const ROW = { cards: [['C3', 'H8', 'SK', 'D5', 'C10', 'HA', 'S6']], row: 0, anchor: 3 };
+	const ROW = { cards: [['DK', 'HK', 'H9', 'C9', 'CJ', 'HJ', 'SJ']], row: 0, anchor: 3 };
 
 	// W, H: the picture; CW: a card's width; FX, FY: the felt's centre; SPOT: the spotlight's ellipse
 	const LAYOUTS = {
